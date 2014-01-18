@@ -44,13 +44,17 @@ void GlobePhotons::checkSetup(const edm::EventSetup& iSetup) {
   iSetup.get<EcalSeverityLevelAlgoRcd>().get(sevlv);
   sevLevel = sevlv.product(); 
 
-  hcalHelper->checkSetup(iSetup);
-  hcalHelperPflow->checkSetup(iSetup);
+  if (haveTowers) {
+    hcalHelper->checkSetup(iSetup);
+    hcalHelperPflow->checkSetup(iSetup);
+  }
 }
 
 GlobePhotons::~GlobePhotons() { 
-  delete hcalHelper;
-  delete hcalHelperPflow;
+  if (haveTowers) {
+    delete hcalHelper;
+    delete hcalHelperPflow;
+  }
 }
 
 GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nome(n) {
@@ -128,17 +132,21 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nom
   cicPhotonId = new CiCPhotonID(iConfig);
   //pfFrixIso = new pfFrixioneIso(); 
 
-  hcalCfg.hOverEConeSize = 0.15;
-  hcalCfg.useTowers = true;
-  hcalCfg.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
-  hcalCfg.hOverEPtMin = 0;
-  hcalCfgPflow.hOverEConeSize = 0.15;
-  hcalCfgPflow.useTowers = true ;
-  hcalCfgPflow.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
-  hcalCfgPflow.hOverEPtMin = 0;
-
-  hcalHelper = new ElectronHcalHelper(hcalCfg);
-  hcalHelperPflow = new ElectronHcalHelper(hcalCfgPflow);
+  haveTowers = iConfig.getParameter<bool>("doCaloTower");
+  
+  if (haveTowers) {
+    hcalCfg.hOverEConeSize = 0.15;
+    hcalCfg.useTowers = true;
+    hcalCfg.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
+    hcalCfg.hOverEPtMin = 0;
+    hcalCfgPflow.hOverEConeSize = 0.15;
+    hcalCfgPflow.useTowers = true ;
+    hcalCfgPflow.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
+    hcalCfgPflow.hOverEPtMin = 0;
+    
+    hcalHelper = new ElectronHcalHelper(hcalCfg);
+    hcalHelperPflow = new ElectronHcalHelper(hcalCfgPflow);
+  }
 }
 
 
@@ -396,8 +404,10 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   //PhotonFix::initialiseGeometry(iSetup);
   checkSetup(iSetup);
 
-  hcalHelper->readEvent(const_cast<edm::Event &>(iEvent));
-  hcalHelperPflow->readEvent(const_cast<edm::Event &>(iEvent));
+  if (haveTowers) {
+    hcalHelper->readEvent(const_cast<edm::Event &>(iEvent));
+    hcalHelperPflow->readEvent(const_cast<edm::Event &>(iEvent));
+  }
 
   // get collections
   edm::Handle<reco::PhotonCollection> phoH;
@@ -754,19 +764,24 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_hoe[pho_n] = localPho->hadronicOverEm();
     pho_h1oe[pho_n] = localPho->hadronicDepth1OverEm();
     pho_h2oe[pho_n] = localPho->hadronicDepth2OverEm();
-
-    if (!(localPho->isStandardPhoton())) {
-      std::vector<CaloTowerDetId> caloTwId = hcalHelperPflow->hcalTowersBehindClusters(*(localPho->superCluster()));
-      pho_h1oe_bc[pho_n] = hcalHelperPflow->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
-      pho_h2oe_bc[pho_n] = hcalHelperPflow->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
-      pho_hoe_bc[pho_n]  = pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
-    } else {
-      std::vector<CaloTowerDetId> caloTwId = hcalHelper->hcalTowersBehindClusters(*(localPho->superCluster()));
-      pho_h1oe_bc[pho_n] = hcalHelper->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
-      pho_h2oe_bc[pho_n] = hcalHelper->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
-      pho_hoe_bc[pho_n]  = pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
-    }
     
+    pho_h1oe_bc[pho_n] = 0;//hcalHelper->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
+    pho_h2oe_bc[pho_n] = 0;//hcalHelper->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
+    pho_hoe_bc[pho_n]  = 0;//pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
+    if (haveTowers) {
+      if (!(localPho->isStandardPhoton())) {
+	std::vector<CaloTowerDetId> caloTwId = hcalHelperPflow->hcalTowersBehindClusters(*(localPho->superCluster()));
+	pho_h1oe_bc[pho_n] = hcalHelperPflow->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
+	pho_h2oe_bc[pho_n] = hcalHelperPflow->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
+	pho_hoe_bc[pho_n]  = pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
+      } else {
+	std::vector<CaloTowerDetId> caloTwId = hcalHelper->hcalTowersBehindClusters(*(localPho->superCluster()));
+	pho_h1oe_bc[pho_n] = hcalHelper->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
+	pho_h2oe_bc[pho_n] = hcalHelper->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
+	pho_hoe_bc[pho_n]  = pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
+      }
+    }
+
     pho_r1x5[pho_n] = localPho->r1x5();
     pho_r2x5[pho_n] = localPho->r2x5();
     pho_r9[pho_n] = localPho->r9();

@@ -173,7 +173,7 @@ h2ganalyzer = cms.EDAnalyzer(
     JetTrackAssociationColl_algo3 = cms.InputTag(""),
     
     rhoCollection_algo1 = cms.InputTag("kt6PFJets","rho"),
-    rhoCollection_algo2 = cms.InputTag("kt6CaloJets","rho"),
+    rhoCollection_algo2 = cms.InputTag("ak5PFJets","rho"),
     rhoCollection_algo3 = cms.InputTag("kt6CaloJetsCentral","rho"),
 
     PFCandidateColl = cms.InputTag("particleFlow"),

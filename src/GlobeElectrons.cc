@@ -399,9 +399,9 @@ void GlobeElectrons::defineBranch(GlobeAnalyzer* ana) {
   sprintf(a2, "el_%s_hcaliso03[el_%s_n]/F", nome, nome);
   ana->Branch(a1, &el_hcaliso03, a2);
 
-  sprintf(a1, "el_%s_hcalsolidiso03", nome);
-  sprintf(a2, "el_%s_hcalsolidiso03[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_hcalsolidiso03, a2);
+  //sprintf(a1, "el_%s_hcalsolidiso03", nome);
+  //sprintf(a2, "el_%s_hcalsolidiso03[el_%s_n]/F", nome, nome);
+  //ana->Branch(a1, &el_hcalsolidiso03, a2);
 
   sprintf(a1, "el_%s_ecaliso03", nome);
   sprintf(a2, "el_%s_ecaliso03[el_%s_n]/F", nome, nome);
@@ -415,9 +415,9 @@ void GlobeElectrons::defineBranch(GlobeAnalyzer* ana) {
   sprintf(a2, "el_%s_hcaliso04[el_%s_n]/F", nome, nome);
   ana->Branch(a1, &el_hcaliso04, a2);
 
-  sprintf(a1, "el_%s_hcalsolidiso04", nome);
-  sprintf(a2, "el_%s_hcalsolidiso04[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_hcalsolidiso04, a2);
+  //sprintf(a1, "el_%s_hcalsolidiso04", nome);
+  //sprintf(a2, "el_%s_hcalsolidiso04[el_%s_n]/F", nome, nome);
+  //ana->Branch(a1, &el_hcalsolidiso04, a2);
 
   sprintf(a1, "el_%s_hcalbciso03", nome);
   sprintf(a2, "el_%s_hcalbciso03[el_%s_n]/F", nome, nome);
@@ -607,24 +607,24 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<reco::GsfElectronCollection> elH;
   iEvent.getByLabel(electronColl, elH);
 
-  edm::Handle<reco::GsfElectronCollection> calibEleH;
-  iEvent.getByLabel("calibratedElectrons", "calibratedGsfElectrons", calibEleH);
+  //edm::Handle<reco::GsfElectronCollection> calibEleH;
+  //iEvent.getByLabel("calibratedElectrons", "calibratedGsfElectrons", calibEleH);
 
-  edm::Handle<edm::ValueMap<double>> calibEnergyH;
-  iEvent.getByLabel("calibratedElectrons" ,"eneRegForGsfEle", calibEnergyH);
-  const edm::ValueMap<double>* calibEnergy = calibEnergyH.product();
+  //edm::Handle<edm::ValueMap<double>> calibEnergyH;
+  //iEvent.getByLabel("calibratedElectrons" ,"eneRegForGsfEle", calibEnergyH);
+  //const edm::ValueMap<double>* calibEnergy = calibEnergyH.product();
   
-  edm::Handle<edm::ValueMap<double>> calibEnergyErrH;
-  iEvent.getByLabel("calibratedElectrons" ,"eneErrorRegForGsfEle", calibEnergyErrH);
-  const edm::ValueMap<double>* calibEnergyErr = calibEnergyErrH.product();
+  //edm::Handle<edm::ValueMap<double>> calibEnergyErrH;
+  //iEvent.getByLabel("calibratedElectrons" ,"eneErrorRegForGsfEle", calibEnergyErrH);
+  //const edm::ValueMap<double>* calibEnergyErr = calibEnergyErrH.product();
   
-  edm::Handle<edm::ValueMap<double>> corrEnergyH;
-  iEvent.getByLabel("eleRegressionEnergy" ,"eneRegForGsfEle", corrEnergyH);
-  const edm::ValueMap<double>* corrEnergy = corrEnergyH.product();
+  //edm::Handle<edm::ValueMap<double>> corrEnergyH;
+  //iEvent.getByLabel("eleRegressionEnergy" ,"eneRegForGsfEle", corrEnergyH);
+  //const edm::ValueMap<double>* corrEnergy = corrEnergyH.product();
   
-  edm::Handle<edm::ValueMap<double>> corrEnergyErrH;
-  iEvent.getByLabel("eleRegressionEnergy" ,"eneErrorRegForGsfEle", corrEnergyErrH);
-  const edm::ValueMap<double>* corrEnergyErr = corrEnergyErrH.product();
+  //edm::Handle<edm::ValueMap<double>> corrEnergyErrH;
+  //iEvent.getByLabel("eleRegressionEnergy" ,"eneErrorRegForGsfEle", corrEnergyErrH);
+  //const edm::ValueMap<double>* corrEnergyErr = corrEnergyErrH.product();
 
   edm::Handle<reco::ConversionCollection> hConversions;
   iEvent.getByLabel(conversionColl, hConversions);
@@ -671,11 +671,10 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", hTransientTrackBuilder);
   transientTrackBuilder = hTransientTrackBuilder.product();
 
-  //typedef std::vector< edm::Handle< edm::ValueMap<double> > > IsoDepositVals;
-  IsoDepositVals electronIsoVals(3);
-  for (size_t j = 0; j<inputTagIsoValElectronsPFId_.size(); ++j) {
-    iEvent.getByLabel(inputTagIsoValElectronsPFId_[j], electronIsoVals[j]);
-  }
+  //IsoDepositVals electronIsoVals(3);
+  //for (size_t j = 0; j<inputTagIsoValElectronsPFId_.size(); ++j) {
+  //  iEvent.getByLabel(inputTagIsoValElectronsPFId_[j], electronIsoVals[j]);
+  //}
 
   edm::ESHandle<CaloTopology> theCaloTopo;
   iSetup.get<CaloTopologyRecord>().get(theCaloTopo);
@@ -863,15 +862,15 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       el_regr_energyerr[el_n] = cor.second;
     }
     
-    reco::GsfElectronRef calibEleRef(calibEleH, std::distance(elH->begin(), igsf));
+    //reco::GsfElectronRef calibEleRef(calibEleH, std::distance(elH->begin(), igsf));
     reco::GsfElectronRef myElectronRef(elH, std::distance(elH->begin(), igsf));
-    el_corr_energy[el_n]     = (*corrEnergy)[myElectronRef];
-    el_corr_energyerr[el_n]  = (*corrEnergyErr)[myElectronRef];
-    el_calib_energy[el_n]    = (*calibEnergy)[calibEleRef];
-    el_calib_energyerr[el_n] = (*calibEnergyErr)[calibEleRef];
+    el_corr_energy[el_n]     = 0;//(*corrEnergy)[myElectronRef];
+    el_corr_energyerr[el_n]  = 0;//(*corrEnergyErr)[myElectronRef];
+    el_calib_energy[el_n]    = 0;//(*calibEnergy)[calibEleRef];
+    el_calib_energyerr[el_n] = 0;//(*calibEnergyErr)[calibEleRef];
 
-    new ((*el_p4_corr)[el_n]) TLorentzVector();
-    ((TLorentzVector *)el_p4_corr->At(el_n))->SetXYZT(calibEleRef->px(), calibEleRef->py(), calibEleRef->pz(), calibEleRef->energy());
+    //new ((*el_p4_corr)[el_n]) TLorentzVector();
+    //((TLorentzVector *)el_p4_corr->At(el_n))->SetXYZT(calibEleRef->px(), calibEleRef->py(), calibEleRef->pz(), calibEleRef->energy());
 
     // ES variables
     el_eseffsixix[el_n] = 0.;
@@ -1101,26 +1100,26 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     el_ecaldrv[el_n] = egsf.ecalDrivenSeed();
     el_tkdrv[el_n] = egsf.trackerDrivenSeed();
     
-    el_pfiso_charged[el_n] =  (*(electronIsoVals[0].product()))[myElectronRef]; //egsf.pfIsolationVariables().chargedHadronIso;
-    el_pfiso_photon[el_n] = (*(electronIsoVals[1].product()))[myElectronRef]; //egsf.pfIsolationVariables().photonIso;
-    el_pfiso_neutral[el_n] = (*(electronIsoVals[2].product()))[myElectronRef]; //egsf.pfIsolationVariables().neutralHadronIso;
+    el_pfiso_charged[el_n] = egsf.pfIsolationVariables().chargedHadronIso;//(*(electronIsoVals[0].product()))[myElectronRef]; //
+    el_pfiso_photon[el_n]  = egsf.pfIsolationVariables().photonIso 	 ;//(*(electronIsoVals[1].product()))[myElectronRef]; //
+    el_pfiso_neutral[el_n] = egsf.pfIsolationVariables().neutralHadronIso;//(*(electronIsoVals[2].product()))[myElectronRef]; //
 
-    el_tkiso04[el_n] = egsf.dr04TkSumPt();
+    el_tkiso04[el_n]   = egsf.dr04TkSumPt();
     el_ecaliso04[el_n] = egsf.dr04EcalRecHitSumEt();
     el_hcaliso04[el_n] = egsf.dr04HcalTowerSumEt();    
 
-    el_tkiso03[el_n] = egsf.dr03TkSumPt();
+    el_tkiso03[el_n]   = egsf.dr03TkSumPt();
     el_ecaliso03[el_n] = egsf.dr03EcalRecHitSumEt();
     el_hcaliso03[el_n] = egsf.dr03HcalTowerSumEt();
 
-    EgammaTowerIsolation hcaliso03(0.3, 0., 0, -1, ctH.product());
-    EgammaTowerIsolation hcaliso04(0.4, 0., 0, -1, ctH.product());
-
-    el_hcalsolidiso03[el_n] = hcaliso03.getTowerEtSum(&(*(egsf.superCluster())) );
-    el_hcalsolidiso04[el_n] = hcaliso04.getTowerEtSum(&(*(egsf.superCluster())) );
-
-    el_hcalbciso03[el_n] = egsf.dr03HcalTowerSumEtBc();
-    el_hcalbciso04[el_n] = egsf.dr04HcalTowerSumEtBc();
+    //EgammaTowerIsolation hcaliso03(0.3, 0., 0, -1, ctH.product());
+    //EgammaTowerIsolation hcaliso04(0.4, 0., 0, -1, ctH.product());
+    //
+    //el_hcalsolidiso03[el_n] = hcaliso03.getTowerEtSum(&(*(egsf.superCluster())) );
+    //el_hcalsolidiso04[el_n] = hcaliso04.getTowerEtSum(&(*(egsf.superCluster())) );
+    //
+    //el_hcalbciso03[el_n] = egsf.dr03HcalTowerSumEtBc();
+    //el_hcalbciso04[el_n] = egsf.dr04HcalTowerSumEtBc();
 
     // Fill out electron identification
     std::vector<edm::Handle<edm::ValueMap<float> > > eIDVM(9); 
