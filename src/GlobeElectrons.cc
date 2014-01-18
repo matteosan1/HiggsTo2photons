@@ -81,26 +81,26 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig, const char* n):
   //  eleRegression->initialize(filename, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
   //}
 
-  mvaNonTrigWeightFiles = iConfig.getParameter<std::vector<std::string> >("electronNonTrigMVAWeightFileNames");
-  mvaTrigWeightFiles    = iConfig.getParameter<std::vector<std::string> >("electronTrigMVAWeightFileNames");
-  
-  for(unsigned int j=0; j<mvaTrigWeightFiles.size(); j++)
-    myManualCatWeightsTrig.push_back(edm::FileInPath(mvaTrigWeightFiles[j]).fullPath());
-
-  for(unsigned int j=0; j<mvaNonTrigWeightFiles.size(); j++)
-    myManualCatWeightsNonTrig.push_back(edm::FileInPath(mvaNonTrigWeightFiles[j]).fullPath());
-
-  myMVANonTrig = new EGammaMvaEleEstimator();
-  myMVANonTrig->initialize("BDT",
-           EGammaMvaEleEstimator::kNonTrig,
-           true, // use manual cat
-           myManualCatWeightsNonTrig);
-
-  myMVATrig = new EGammaMvaEleEstimator();
-  myMVATrig->initialize("BDT",
-           EGammaMvaEleEstimator::kTrig,
-           true, // use manual cat
-           myManualCatWeightsTrig);
+  //mvaNonTrigWeightFiles = iConfig.getParameter<std::vector<std::string> >("electronNonTrigMVAWeightFileNames");
+  //mvaTrigWeightFiles    = iConfig.getParameter<std::vector<std::string> >("electronTrigMVAWeightFileNames");
+  //
+  //for(unsigned int j=0; j<mvaTrigWeightFiles.size(); j++)
+  //  myManualCatWeightsTrig.push_back(edm::FileInPath(mvaTrigWeightFiles[j]).fullPath());
+  //
+  //for(unsigned int j=0; j<mvaNonTrigWeightFiles.size(); j++)
+  //  myManualCatWeightsNonTrig.push_back(edm::FileInPath(mvaNonTrigWeightFiles[j]).fullPath());
+  //
+  //myMVANonTrig = new EGammaMvaEleEstimator();
+  //myMVANonTrig->initialize("BDT",
+  //         EGammaMvaEleEstimator::kNonTrig,
+  //         true, // use manual cat
+  //         myManualCatWeightsNonTrig);
+  //
+  //myMVATrig = new EGammaMvaEleEstimator();
+  //myMVATrig->initialize("BDT",
+  //         EGammaMvaEleEstimator::kTrig,
+  //         true, // use manual cat
+  //         myManualCatWeightsTrig);
 
   inputTagIsoValElectronsPFId_   = iConfig.getParameter< std::vector<edm::InputTag> >("IsoValElectronPF");   
 
@@ -115,8 +115,8 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig, const char* n):
 
 GlobeElectrons::~GlobeElectrons() {
 
-  delete myMVANonTrig;
-  delete myMVATrig;
+  //delete myMVANonTrig;
+  //delete myMVATrig;
   delete gCUT;
   delete gES;
 }
@@ -651,13 +651,13 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<reco::VertexCollection> vtxH;
   iEvent.getByLabel(vertexColl, vtxH);
 
-  edm::Handle<double> rhoHandle;
-  iEvent.getByLabel(rhoCollection, rhoHandle);
-  double rho = *(rhoHandle.product());
+  //edm::Handle<double> rhoHandle;
+  //iEvent.getByLabel(rhoCollection, rhoHandle);
+  //double rho = *(rhoHandle.product());
   
   // transient track builder needed for ele ID MVA
-  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder_);  
-  const TransientTrackBuilder thebuilder = *(trackBuilder_.product());
+  //iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder_);  
+  //const TransientTrackBuilder thebuilder = *(trackBuilder_.product());
   
   /*
   edm::Handle<reco::PFCandidateCollection> pfHandle;
@@ -854,9 +854,9 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     }
 
     if (regressionVersion == "V3") {
-      std::pair<double,double> cor = ecorr_.CorrectedEnergyWithErrorV3(egsf, *vtxH, rho, ecalLazyTool, iSetup);
-      el_regr_energy[el_n]    = cor.first;
-      el_regr_energyerr[el_n] = cor.second;
+      //std::pair<double,double> cor = ecorr_.CorrectedEnergyWithErrorV3(egsf, *vtxH, rho, ecalLazyTool, iSetup);
+      el_regr_energy[el_n]    = 0;//cor.first;
+      el_regr_energyerr[el_n] = 0;//cor.second;
     } else {
       std::pair<double,double> cor = ecorr_.CorrectedEnergyWithError(egsf, *vtxH, ecalLazyTool, iSetup);
       el_regr_energy[el_n]    = cor.first;
@@ -1050,17 +1050,17 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //el_mva_noiso[el_n] = egsf.mva();
     //el_mva[el_n] = mvaEstimator->mva(egsf, vtxH->size());
     
-    el_mva_nontrig[el_n] = myMVANonTrig->mvaValue(egsf, 
-						    vtxH->front(), 
-						    thebuilder,
-						    ecalLazyTool,
-						    false);
+    el_mva_nontrig[el_n] = 0; //myMVANonTrig->mvaValue(egsf, 
+    //		    vtxH->front(), 
+    //					    thebuilder,
+    //					    ecalLazyTool,
+    //					    false);
        
-    el_mva_trig[el_n] = myMVATrig->mvaValue(egsf,
-					      vtxH->front(),
-					      thebuilder,
-					      ecalLazyTool,
-					      false);
+    el_mva_trig[el_n] = 0;//myMVATrig->mvaValue(egsf,
+    //	      vtxH->front(),
+    //				      thebuilder,
+    //				      ecalLazyTool,
+    //				      false);
     
     //std::cout<<"el_n el_mva_trig el_mva_nontrig "<<el_n<<" "<<el_mva_trig[el_n]<<" "<<el_mva_nontrig[el_n]<<std::endl;
 

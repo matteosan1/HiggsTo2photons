@@ -29,7 +29,7 @@
 #include "RecoEgamma/EgammaTools/interface/EGEnergyCorrector.h"
 
 //#include "FWCore/ParameterSet/interface/FileInPath.h"
-#include "EGamma/EGammaAnalysisTools/interface/EGammaMvaEleEstimator.h"
+//#include "EGamma/EGammaAnalysisTools/interface/EGammaMvaEleEstimator.h"
 //#include "EGamma/EGammaAnalysisTools/interface/ElectronEnergyRegressionEvaluate.h"
 
 #include "TClonesArray.h"
@@ -53,8 +53,8 @@ class GlobeElectrons {
                       const edm::Event&, const edm::EventSetup&);
   std::map<DetId, EcalRecHit> rechits_map_;
 
-  EGammaMvaEleEstimator* myMVANonTrig;
-  EGammaMvaEleEstimator* myMVATrig;
+  //EGammaMvaEleEstimator* myMVANonTrig;
+  //EGammaMvaEleEstimator* myMVATrig;
   std::vector<std::string> myManualCatWeightsNonTrig;
   std::vector<std::string> myManualCatWeightsTrig;
   edm::ESHandle<TransientTrackBuilder> trackBuilder_;

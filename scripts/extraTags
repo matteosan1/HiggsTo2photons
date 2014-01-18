@@ -41,7 +41,8 @@ get_git()
 
 #add the packages in cmssw history
 #git cms-cvs-history import V00-00-09 CommonTools/RecoUtil ## doesn't exist anymore
-git cms-cvs-history import V09-00-00 RecoEgamma/EgammaTools
+
+#git cms-cvs-history import V09-00-00 RecoEgamma/EgammaTools
 
 #add the UserCode code
 #cd $CMSSW_BASE/src ; mkdir  CommonTools ; cd CommonTools ; git clone git@github.com:h2gglobe/CommonTools_RecoUtils RecoUtils -b V00-00-09
@@ -49,16 +50,16 @@ git cms-cvs-history import V09-00-00 RecoEgamma/EgammaTools
 #cd $CMSSW_BASE/src ; mkdir EGamma ; cd EGamma; git clone git@github.com:h2gglobe/EGammaAnalysisTools; cd EGammaAnalysisTools; git checkout master;
 #cd $CMSSW_BASE/src ; mkdir EgammaAnalysis ; cd EgammaAnalysis; git clone git@github.com:h2gglobe/ElectronTools; cd ElectronTools; git checkout master;
 
-get_git V00-00-09 https://github.com/h2gglobe/CommonTools_RecoUtils.git CommonTools/RecoUtils
+#get_git V00-00-09 https://github.com/h2gglobe/CommonTools_RecoUtils.git CommonTools/RecoUtils
 get_git V00-02-05 https://github.com/h2gglobe/External.git CMGTools/External
-get_git master https://github.com/h2gglobe/EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
-get_git master https://github.com/h2gglobe/ElectronTools.git EgammaAnalysis/ElectronTools
+#get_git master https://github.com/h2gglobe/EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
+#get_git master https://github.com/h2gglobe/ElectronTools.git EgammaAnalysis/ElectronTools
 
 #add this analyzer
 #cd $CMSSW_BASE/src ; mkdir HiggsAnalysis; cd HiggsAnalysis; git clone git@github.com:h2gglobe/HiggsTo2photons; cd HiggsTo2photons ; git checkout branch_for_53X
 
 #download extra informations
-cd $CMSSW_BASE/src ; cd EGamma/EGammaAnalysisTools/data/ ; wget -i ../../../HiggsAnalysis/HiggsTo2photons/scripts/download.url
+#cd $CMSSW_BASE/src ; cd EGamma/EGammaAnalysisTools/data/ ; wget -i ../../../HiggsAnalysis/HiggsTo2photons/scripts/download.url
 
 #go back to the BASE directory
 cd $CMSSW_BASE/src
