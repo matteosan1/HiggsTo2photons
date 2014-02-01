@@ -133,7 +133,6 @@ branchesToSkim.extend((
  'el_std_nambtk',
  'el_std_nbrem',
  'el_std_nbrempf',
- 'el_std_p4_corr',
  'el_std_passcutpresel',
  'el_std_passmvapresel',
  'el_std_poscalo',

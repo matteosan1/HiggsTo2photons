@@ -287,27 +287,29 @@ process.h2ganalyzer.RootFileName = 'aod_mc_test.root'
 process.h2ganalyzer.Debug_Level = 0
 
 ##---------------------ELECTRON REGRESSION AND SMEARING ------------------------------
-#process.load("EgammaAnalysis.ElectronTools.calibratedElectrons_cfi")
-#
+process.load("EgammaAnalysis.ElectronTools.calibratedElectrons_cfi")
+
 ## dataset to correct
-#if (flagMC == 'ON'):
-#  process.calibratedElectrons.isMC = cms.bool(True)
-#  process.calibratedElectrons.inputDataset = cms.string("Summer12_DR53X_HCP2012")
-#else:
-#  process.calibratedElectrons.isMC = cms.bool(False)
-#  process.calibratedElectrons.inputDataset = cms.string("Moriond2013")
-#  
-#process.calibratedElectrons.updateEnergyError = cms.bool(True)
-#process.calibratedElectrons.applyCorrections = cms.int32(1)
-#process.calibratedElectrons.smearingRatio = cms.double(0.607)
-#process.calibratedElectrons.verbose = cms.bool(False)
-##process.calibratedElectrons.synchronization = cms.bool(True) 
-#
-#process.load('EgammaAnalysis.ElectronTools.electronRegressionEnergyProducer_cfi')
-#process.eleRegressionEnergy.inputElectronsTag = cms.InputTag('gsfElectrons')
-#process.eleRegressionEnergy.inputCollectionType = cms.uint32(0)
-#process.eleRegressionEnergy.useRecHitCollections = cms.bool(True)
-#process.eleRegressionEnergy.produceValueMaps = cms.bool(True)
+if (flagMC == 'ON'):
+  process.calibratedElectrons.isMC = cms.bool(True)
+  process.calibratedElectrons.inputDataset = cms.string("Summer12_DR53X_HCP2012")
+else:
+  process.calibratedElectrons.isMC = cms.bool(False)
+  process.calibratedElectrons.inputDataset = cms.string("Moriond2013")
+  
+process.calibratedElectrons.updateEnergyError = cms.bool(True)
+process.calibratedElectrons.applyCorrections = cms.int32(1)
+process.calibratedElectrons.smearingRatio = cms.double(0.607)
+process.calibratedElectrons.verbose = cms.bool(False)
+#process.calibratedElectrons.synchronization = cms.bool(True) 
+
+process.load('EgammaAnalysis.ElectronTools.electronRegressionEnergyProducer_cfi')
+process.eleRegressionEnergy.inputElectronsTag = cms.InputTag('gsfElectrons')
+process.eleRegressionEnergy.inputCollectionType = cms.uint32(0)
+process.eleRegressionEnergy.useRecHitCollections = cms.bool(True)
+process.eleRegressionEnergy.produceValueMaps = cms.bool(True)
+
+process.calibratedElectrons = cms.Sequence(process.eleRegressionEnergy*process.calibratedElectrons)
 
 ##-------------------- ANOMALOUS HCAL LASER CORRECTION FILTER ------------------------
 #process.load("EventFilter.HcalRawToDigi.hcallasereventfilter2012_cff")
@@ -525,7 +527,7 @@ process.newPFchsBtaggingSequence = cms.Sequence(
 #################################################
 # Define path, first for AOD case then for RECO #
 #################################################
-process.p11 = cms.Path(process.eventCounters*process.eventFilter1*process.particleFlowTmpPtrs*process.pfNoPileUpSequence*process.ak5PFchsJets*process.producePFMETCorrections*process.newPFBtaggingSequence*process.newPFchsBtaggingSequence)
+process.p11 = cms.Path(process.eventCounters*process.eventFilter1*process.particleFlowTmpPtrs*process.pfNoPileUpSequence*process.ak5PFchsJets*process.producePFMETCorrections*process.newPFBtaggingSequence*process.newPFchsBtaggingSequence*process.calibratedElectrons)
 
 if (flagFastSim == 'OFF' or flagAOD == 'OFF'):
   process.p11 *= process.piZeroDiscriminators

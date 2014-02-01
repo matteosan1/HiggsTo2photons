@@ -28,9 +28,9 @@
 
 #include "RecoEgamma/EgammaTools/interface/EGEnergyCorrector.h"
 
-//#include "FWCore/ParameterSet/interface/FileInPath.h"
-//#include "EGamma/EGammaAnalysisTools/interface/EGammaMvaEleEstimator.h"
-//#include "EGamma/EGammaAnalysisTools/interface/ElectronEnergyRegressionEvaluate.h"
+#include "FWCore/ParameterSet/interface/FileInPath.h"
+#include "EgammaAnalysis/ElectronTools/interface/EGammaMvaEleEstimator.h"
+#include "EgammaAnalysis/ElectronTools/interface/ElectronEnergyRegressionEvaluate.h"
 
 #include "TClonesArray.h"
 #include "TLorentzVector.h"
@@ -53,8 +53,8 @@ class GlobeElectrons {
                       const edm::Event&, const edm::EventSetup&);
   std::map<DetId, EcalRecHit> rechits_map_;
 
-  //EGammaMvaEleEstimator* myMVANonTrig;
-  //EGammaMvaEleEstimator* myMVATrig;
+  EGammaMvaEleEstimator* myMVANonTrig;
+  EGammaMvaEleEstimator* myMVATrig;
   std::vector<std::string> myManualCatWeightsNonTrig;
   std::vector<std::string> myManualCatWeightsTrig;
   edm::ESHandle<TransientTrackBuilder> trackBuilder_;
@@ -157,8 +157,6 @@ class GlobeElectrons {
   Float_t el_ip3d_sig[MAX_ELECTRONS];
   Float_t el_sc_time[MAX_ELECTRONS];
 
-  //Float_t el_mva[MAX_ELECTRONS];  
-  //Float_t el_mva_noiso[MAX_ELECTRONS];
   Float_t el_mva_nontrig[MAX_ELECTRONS];  
   Float_t el_mva_trig[MAX_ELECTRONS];  
   Bool_t el_ecaldrv[MAX_ELECTRONS];
@@ -252,10 +250,10 @@ class GlobeElectrons {
   bool energyCorrectionsFromDB;
   std::string energyRegFilename;
   std::string regressionVersion;
-  //std::string eleRegressionFilename;
-  //Int_t eleRegressionType;
+  std::string eleRegressionFilename;
+  Int_t eleRegressionType;
 
-  //ElectronEnergyRegressionEvaluate* eleRegression;
+  ElectronEnergyRegressionEvaluate* eleRegression;
 
   const TransientTrackBuilder* transientTrackBuilder;
 };

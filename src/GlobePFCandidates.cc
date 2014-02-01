@@ -79,9 +79,9 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
   std::vector<reco::PFCandidate> candidates = (*pfCandidatesH.product());
 
   //PF Candidates from PileUp
-  edm::Handle<reco::PFCandidateCollection> pfCandidatesPileUpH;
+  edm::Handle<std::vector< edm::FwdPtr<reco::PFCandidate> >> pfCandidatesPileUpH;
   iEvent.getByLabel("pfPileUp", pfCandidatesPileUpH);
-  std::vector<reco::PFCandidate> pucandidates = (*pfCandidatesPileUpH.product());
+  std::vector< edm::FwdPtr<reco::PFCandidate> > pucandidates = (*pfCandidatesPileUpH.product());
 
   edm::Handle < reco::GsfElectronCollection > theEGammaCollection;
   iEvent.getByLabel(electronCollStd, theEGammaCollection);
@@ -98,10 +98,9 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
     bool save = false;  
     bool isCandFromPU = false;
-    unsigned npucandidates = pfCandidatesPileUpH->size();
+    unsigned npucandidates = pucandidates.size();
     for (unsigned npuit = 0; npuit < npucandidates; npuit++) {
-      edm::Ptr<reco::PFCandidate> ptr(pfCandidatesPileUpH, npuit);
-      float dR = deltaR(ptr->p4(), it->p4());
+      float dR = deltaR(pucandidates[npuit]->p4(), it->p4());
       if (dR < 1e-5) {
 	isCandFromPU = true;
 	break;

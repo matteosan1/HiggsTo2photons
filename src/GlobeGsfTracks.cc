@@ -198,7 +198,7 @@ void GlobeGsfTracks::GetAssociatedTrackingParticleIndex(const edm::Event& iEvent
   iSetup.get<TrackAssociatorRecord>().get(assocLabel, theAssociator);
   
   // call the associator functions:
-  reco::RecoToSimCollection recSimColl = theAssociator->associateRecoToSim(tkH, tpH, &iEvent);
+  reco::RecoToSimCollection recSimColl = theAssociator->associateRecoToSim(tkH, tpH, &iEvent, &iSetup);
   
   TrackingParticleRef associatedTrackingParticle;
   

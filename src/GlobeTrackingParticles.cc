@@ -67,7 +67,7 @@ bool GlobeTrackingParticles::analyze(const edm::Event& iEvent, const edm::EventS
     iSetup.get<TrackAssociatorRecord>().get(assocLabel, theAssociator);
 
     // call the associator functions:
-    reco::SimToRecoCollection simRecColl = theAssociator->associateSimToReco(recoTrackHandle,trackingParticleHandle, &iEvent);
+    reco::SimToRecoCollection simRecColl = theAssociator->associateSimToReco(recoTrackHandle,trackingParticleHandle, &iEvent, &iSetup);
 
     // Get the sim Tracks and vertices
     edm::Handle<edm::SimTrackContainer> stkH;
@@ -136,69 +136,33 @@ Int_t GlobeTrackingParticles::GetAssociatedGenParticleIndex(TrackingParticleRef 
 {
   
   int matchedGenParticleIndex = -1;
-  HepMC::GenParticle gp;
+  reco::GenParticle gp;
   
-  // assumption: one gen/sim particle per TP (true for CMSSW_1_6_X at least)
-  if( tp->genParticle().size())
-    {
-      gp = **( tp->genParticle_begin() );
-    }
-  else
-    {
-      return -1;
-    }
+  if( tp->genParticles().size()) {
+    gp = **(tp->genParticle_begin());
+  } else {
+    return -1;
+  }
   
   const HepMC::GenEvent* myGenEvent = genEvtH->GetEvent();
   int genind = 0;
-  for (HepMC::GenEvent::particle_const_iterator it = myGenEvent->particles_begin(); it != myGenEvent->particles_end(); ++it) 
-    {
-      if (genind >= MAX_GENERATOR) 
-        {
-          std::cout << "GlobeGenerator: WARNING TOO MANY Generator PARTICLES (allowed " << MAX_GENERATOR << ")" << std::endl;
-          break;
-        }
-      if( gp == **it)
-        {
-          matchedGenParticleIndex = genind;
-          break;
-        }
-      genind++;
+  for (HepMC::GenEvent::particle_const_iterator it = myGenEvent->particles_begin(); it != myGenEvent->particles_end(); ++it) {
+    if (genind >= MAX_GENERATOR) {
+      std::cout << "GlobeGenerator: WARNING TOO MANY Generator PARTICLES (allowed " << MAX_GENERATOR << ")" << std::endl;
+      break;
     }
+
+    // FIXME 
+    //if( gp == **it) {
+    matchedGenParticleIndex = genind;
+    //break;
+    //}
+    genind++;
+  }
   
   return matchedGenParticleIndex;
 }
 
-//#ifndef CMSSW_VERSION_209_AND_210
-////perform the match by associator (default is hits) 
-//Int_t GlobeTrackingParticles::GetAssociatedRecoTrackIndex(TrackingParticleRef tp, const edm::Handle<reco::TrackCollection> &tkH, const reco::SimToRecoCollection &simRecColl, GlobeTracks *tracks)
-//{
-//  
-//    reco::TrackRef associatedRecoTrack;
-//    int matchedTrackIndex = -1;     // -1 unmatched        
-//    
-//    if(tracks) if(simRecColl.find(tp) != simRecColl.end())
-//    {
-//        // get the associated recoTrack
-//        associatedRecoTrack = simRecColl[tp].begin()->first;
-//    
-//        // get the index of the associated recoTrack
-//        for(int i = 0; i < tracks->tk_n; ++i)
-//        {
-//            reco::TrackRef recoTrack(tkH, tracks->tk_cmsind[i]);
-//            if( gCUT->cut(*recoTrack) ) continue;
-//
-//            if(associatedRecoTrack == recoTrack)
-//            {
-//                matchedTrackIndex = i;
-//                break;
-//            }
-//        } 
-//    }
-//  
-//    return matchedTrackIndex;
-//}
-//#else
-//perform the match by associator (default is hits) 
 Int_t GlobeTrackingParticles::GetAssociatedRecoTrackIndex(TrackingParticleRef tp, const edm::Handle<edm::View<reco::Track> > &tkH, const reco::SimToRecoCollection &simRecColl, GlobeTracks *tracks) {
    
   edm::RefToBase<reco::Track> associatedRecoTrack;
@@ -254,32 +218,31 @@ void GlobeTrackingParticles::CalcTrackingParticleImpactParam(double &d0, double 
 Int_t GlobeTrackingParticles::GetMotherTrackingParticle(const TrackingParticle& tp)
 {
     //std::cout << "GetMotherTrackingParticle: " << std::endl;
-    if(tp.genParticle().size() > 0) 
-        return GetMotherGenParticle( **tp.genParticle().begin() );
-    else if(tp.genParticle().size() == 0 && tp.g4Tracks().size() > 0) 
+    if(tp.genParticles().size() > 0) 
+        return GetMotherGenParticle( **tp.genParticles().begin() );
+    else if(tp.genParticles().size() == 0 && tp.g4Tracks().size() > 0) 
         return GetMotherSimTrack( *tp.g4Tracks().begin() );
     else return -9999;
 }
 
 
-
-Int_t GlobeTrackingParticles::GetMotherGenParticle(const HepMC::GenParticle& gp)
-{
+// FIXME
+Int_t GlobeTrackingParticles::GetMotherGenParticle(const reco::GenParticle& gp) {
     //std::cout << "GetMotherGenParticle: " << std::endl;
     // assumption: only one mother of the gen particle
 
-    for(HepMC::GenVertex::particles_in_const_iterator iter = gp.production_vertex()->particles_in_const_begin();
-        iter != gp.production_vertex()->particles_in_const_end(); ++iter)
-    {
-        if( (*iter)->pdg_id() == gp.pdg_id() )
-        {
-            return GetMotherGenParticle(**iter);
-        }
-        else
-        {
-            return (*iter)->pdg_id();
-        }
-    }
+    //for(HepMC::GenVertex::particles_in_const_iterator iter = gp.production_vertex()->particles_in_const_begin();
+    //    iter != gp.production_vertex()->particles_in_const_end(); ++iter)
+    //{
+    //    if( (*iter)->pdg_id() == gp.pdg_id() )
+    //    {
+    //        return GetMotherGenParticle(**iter);
+    //    }
+    //    else
+    //    {
+    //        return (*iter)->pdg_id();
+    //    }
+    //}
     
     return -9999;
 }
