@@ -89,7 +89,7 @@ class GlobeCuts {
   double convertedPhotonEtCut_; 
   double electronEtCut_; 
   double superClusterEnergyCut_; 
-  double basicClusterEnergyCut_; 
+  double basicClusterEtCut_; 
   double caloTowerEtCut_; 
 
   double hcalHBHEEnergyCut_; 

@@ -27,7 +27,7 @@ GlobeCuts::GlobeCuts(const edm::ParameterSet& iConfig) {
   convertedPhotonEtCut_     = psetConvertedPhoton.getParameter<double>("EtCut");
   electronEtCut_            = psetElectron.getParameter<double>("EtCut");
   superClusterEnergyCut_    = psetSuperCluster.getParameter<double>("EnergyCut");
-  basicClusterEnergyCut_    = psetBasicCluster.getParameter<double>("EnergyCut");
+  basicClusterEtCut_        = psetBasicCluster.getParameter<double>("EtCut");
   caloTowerEtCut_           = psetCaloTower.getParameter<double>("EtCut");
   trackPtCut_               = psetTrack.getParameter<double>("PtCut");
   simHitEnergyCut_          = psetSimHit.getParameter<double>("EnergyCut");
@@ -103,7 +103,7 @@ bool GlobeCuts::cut(const reco::SuperCluster &supercluster) {
 }
 // Basic Clusters
 bool GlobeCuts::cut(const reco::BasicCluster &basiccluster) { 
-          return (basiccluster.energy() < basicClusterEnergyCut_); 
+          return (basiccluster.energy()/cosh(basiccluster.eta()) < basicClusterEtCut_); 
 }
 // CaloTowers
 bool GlobeCuts::cut(const CaloTower &calotower) { 

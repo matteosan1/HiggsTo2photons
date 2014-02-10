@@ -309,7 +309,7 @@ process.eleRegressionEnergy.inputCollectionType = cms.uint32(0)
 process.eleRegressionEnergy.useRecHitCollections = cms.bool(True)
 process.eleRegressionEnergy.produceValueMaps = cms.bool(True)
 
-process.calibratedElectrons = cms.Sequence(process.eleRegressionEnergy*process.calibratedElectrons)
+process.calibratedElectronsSequence = cms.Sequence(process.eleRegressionEnergy*process.calibratedElectrons)
 
 ##-------------------- ANOMALOUS HCAL LASER CORRECTION FILTER ------------------------
 #process.load("EventFilter.HcalRawToDigi.hcallasereventfilter2012_cff")
@@ -527,7 +527,7 @@ process.newPFchsBtaggingSequence = cms.Sequence(
 #################################################
 # Define path, first for AOD case then for RECO #
 #################################################
-process.p11 = cms.Path(process.eventCounters*process.eventFilter1*process.particleFlowTmpPtrs*process.pfNoPileUpSequence*process.ak5PFchsJets*process.producePFMETCorrections*process.newPFBtaggingSequence*process.newPFchsBtaggingSequence*process.calibratedElectrons)
+process.p11 = cms.Path(process.eventCounters*process.eventFilter1*process.particleFlowTmpPtrs*process.pfNoPileUpSequence*process.ak5PFchsJets*process.producePFMETCorrections*process.newPFBtaggingSequence*process.newPFchsBtaggingSequence*process.calibratedElectronsSequence)
 
 if (flagFastSim == 'OFF' or flagAOD == 'OFF'):
   process.p11 *= process.piZeroDiscriminators

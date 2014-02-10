@@ -1063,7 +1063,7 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     el_tkdrv[el_n] = egsf.trackerDrivenSeed();
     
     el_pfiso_charged[el_n] = egsf.pfIsolationVariables().chargedHadronIso;//(*(electronIsoVals[0].product()))[myElectronRef]; //
-    el_pfiso_photon[el_n]  = egsf.pfIsolationVariables().photonIso 	 ;//(*(electronIsoVals[1].product()))[myElectronRef]; //
+    el_pfiso_photon[el_n]  = egsf.pfIsolationVariables().photonIso	 ;//(*(electronIsoVals[1].product()))[myElectronRef]; //
     el_pfiso_neutral[el_n] = egsf.pfIsolationVariables().neutralHadronIso;//(*(electronIsoVals[2].product()))[myElectronRef]; //
 
     el_tkiso04[el_n]   = egsf.dr04TkSumPt();
@@ -1141,11 +1141,6 @@ std::pair<unsigned int, float> GlobeElectrons::sharedHits(const reco::Track& tra
   float fraction = (float) shared/std::min(trackA.found(),trackB.found());
   return std::make_pair(shared,fraction);
 }
-
-
-
-
-
 
 
 
