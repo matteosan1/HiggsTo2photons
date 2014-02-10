@@ -66,41 +66,42 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig, const char* n):
 
   eIDLabels = iConfig.getParameter<std::vector<edm::InputTag> >("eIDLabels");
 
-  //eleRegressionFilename = iConfig.getParameter<std::string> ("eleRegressionFileName");  
-  //eleRegressionType     = iConfig.getParameter<int> ("eleRegressionType");  
+  eleRegressionFilename = iConfig.getParameter<std::string> ("eleRegressionFileName");  
+  eleRegressionType     = iConfig.getParameter<int> ("eleRegressionType");  
 
-  //eleRegression = new ElectronEnergyRegressionEvaluate();
-  //char filename[500];
-  //char* descr = getenv("CMSSW_BASE");
-  //const char* version[] = {"V1", "V2"};
-  //sprintf(filename, "%s/src/EGamma/EGammaAnalysisTools/data/%s_%s.root", descr, eleRegressionFilename.c_str(), version[eleRegressionType]);
-  //if (fexist(filename)) {
-  //  sprintf(filename, "http://cern.ch/sani/%s_%s.root", eleRegressionFilename.c_str(), version[eleRegressionType]);
-  //  eleRegression->initialize(filename, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
-  //} else {
-  //  eleRegression->initialize(filename, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
-  //}
+  eleRegression = new ElectronEnergyRegressionEvaluate();
+  char filename[500], filename2[500];
+  char* descr = getenv("CMSSW_BASE");
+  const char* version[] = {"V1", "V2"};
+  sprintf(filename, "%s/src/EgammaAnalysis/ElectronTools/data/%s_%s.root", descr, eleRegressionFilename.c_str(), version[eleRegressionType]);
+  sprintf(filename2, "EgammaAnalysis/ElectronTools/data/%s_%s.root", eleRegressionFilename.c_str(), version[eleRegressionType]);
+  if (fexist(filename)) {
+    sprintf(filename, "http://cern.ch/sani/%s_%s.root", eleRegressionFilename.c_str(), version[eleRegressionType]);
+    eleRegression->initialize(filename, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
+  } else {
+    eleRegression->initialize(filename2, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
+  }
 
-  //mvaNonTrigWeightFiles = iConfig.getParameter<std::vector<std::string> >("electronNonTrigMVAWeightFileNames");
-  //mvaTrigWeightFiles    = iConfig.getParameter<std::vector<std::string> >("electronTrigMVAWeightFileNames");
-  //
-  //for(unsigned int j=0; j<mvaTrigWeightFiles.size(); j++)
-  //  myManualCatWeightsTrig.push_back(edm::FileInPath(mvaTrigWeightFiles[j]).fullPath());
-  //
-  //for(unsigned int j=0; j<mvaNonTrigWeightFiles.size(); j++)
-  //  myManualCatWeightsNonTrig.push_back(edm::FileInPath(mvaNonTrigWeightFiles[j]).fullPath());
-  //
-  //myMVANonTrig = new EGammaMvaEleEstimator();
-  //myMVANonTrig->initialize("BDT",
-  //         EGammaMvaEleEstimator::kNonTrig,
-  //         true, // use manual cat
-  //         myManualCatWeightsNonTrig);
-  //
-  //myMVATrig = new EGammaMvaEleEstimator();
-  //myMVATrig->initialize("BDT",
-  //         EGammaMvaEleEstimator::kTrig,
-  //         true, // use manual cat
-  //         myManualCatWeightsTrig);
+  mvaNonTrigWeightFiles = iConfig.getParameter<std::vector<std::string> >("electronNonTrigMVAWeightFileNames");
+  mvaTrigWeightFiles    = iConfig.getParameter<std::vector<std::string> >("electronTrigMVAWeightFileNames");
+  
+  for(unsigned int j=0; j<mvaTrigWeightFiles.size(); j++)
+    myManualCatWeightsTrig.push_back(edm::FileInPath(mvaTrigWeightFiles[j]).fullPath());
+  
+  for(unsigned int j=0; j<mvaNonTrigWeightFiles.size(); j++)
+    myManualCatWeightsNonTrig.push_back(edm::FileInPath(mvaNonTrigWeightFiles[j]).fullPath());
+  
+  myMVANonTrig = new EGammaMvaEleEstimator();
+  myMVANonTrig->initialize("BDT",
+           EGammaMvaEleEstimator::kNonTrig,
+           true, // use manual cat
+           myManualCatWeightsNonTrig);
+  
+  myMVATrig = new EGammaMvaEleEstimator();
+  myMVATrig->initialize("BDT",
+           EGammaMvaEleEstimator::kTrig,
+           true, // use manual cat
+           myManualCatWeightsTrig);
 
   inputTagIsoValElectronsPFId_   = iConfig.getParameter< std::vector<edm::InputTag> >("IsoValElectronPF");   
 
@@ -115,8 +116,8 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig, const char* n):
 
 GlobeElectrons::~GlobeElectrons() {
 
-  //delete myMVANonTrig;
-  //delete myMVATrig;
+  delete myMVANonTrig;
+  delete myMVATrig;
   delete gCUT;
   delete gES;
 }
@@ -298,16 +299,6 @@ void GlobeElectrons::defineBranch(GlobeAnalyzer* ana) {
   sprintf(a2, "el_%s_chi2[el_%s_n]/F", nome, nome);
   ana->Branch(a1, &el_chi2, a2);
   
-  /*
-  sprintf(a1, "el_%s_mva_noiso", nome);
-  sprintf(a2, "el_%s_mva_noiso[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_mva_noiso, a2);
-
-  sprintf(a1, "el_%s_mva", nome);
-  sprintf(a2, "el_%s_mva[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_mva, a2);
-  */
-
   sprintf(a1, "el_%s_mva_nontrig", nome);
   sprintf(a2, "el_%s_mva_nontrig[el_%s_n]/F", nome, nome);
   ana->Branch(a1, &el_mva_nontrig, a2);
@@ -356,32 +347,6 @@ void GlobeElectrons::defineBranch(GlobeAnalyzer* ana) {
   sprintf(a1, "el_%s_tkind", nome);
   sprintf(a2, "el_%s_tkind[el_%s_n]/I", nome, nome);
   ana->Branch(a1, &el_tkind, a2); 
-
-  /*
-  sprintf(a1, "el_%s_pfiso_myneutral03", nome);
-  sprintf(a2, "el_%s_pfiso_myneutral03[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_myneutral03, a2);
-
-  sprintf(a1, "el_%s_pfiso_mycharged03", nome);
-  sprintf(a2, "el_%s_pfiso_mycharged03[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_mycharged03, a2);
-  
-  sprintf(a1, "el_%s_pfiso_myphoton03", nome);
-  sprintf(a2, "el_%s_pfiso_myphoton03[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_myphoton03, a2);
-
-  sprintf(a1, "el_%s_pfiso_myneutral04", nome);
-  sprintf(a2, "el_%s_pfiso_myneutral04[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_myneutral04, a2);
-
-  sprintf(a1, "el_%s_pfiso_mycharged04", nome);
-  sprintf(a2, "el_%s_pfiso_mycharged04[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_mycharged04, a2);
-  
-  sprintf(a1, "el_%s_pfiso_myphoton04", nome);
-  sprintf(a2, "el_%s_pfiso_myphoton04[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_myphoton04, a2);
-  */
 
   sprintf(a1, "el_%s_pfiso_neutral", nome);
   sprintf(a2, "el_%s_pfiso_neutral[el_%s_n]/F", nome, nome);
@@ -607,24 +572,24 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<reco::GsfElectronCollection> elH;
   iEvent.getByLabel(electronColl, elH);
 
-  //edm::Handle<reco::GsfElectronCollection> calibEleH;
-  //iEvent.getByLabel("calibratedElectrons", "calibratedGsfElectrons", calibEleH);
+  edm::Handle<reco::GsfElectronCollection> calibEleH;
+  iEvent.getByLabel("calibratedElectrons", "calibratedGsfElectrons", calibEleH);
 
-  //edm::Handle<edm::ValueMap<double>> calibEnergyH;
-  //iEvent.getByLabel("calibratedElectrons" ,"eneRegForGsfEle", calibEnergyH);
-  //const edm::ValueMap<double>* calibEnergy = calibEnergyH.product();
+  edm::Handle<edm::ValueMap<double>> calibEnergyH;
+  iEvent.getByLabel("calibratedElectrons" ,"eneRegForGsfEle", calibEnergyH);
+  const edm::ValueMap<double>* calibEnergy = calibEnergyH.product();
   
-  //edm::Handle<edm::ValueMap<double>> calibEnergyErrH;
-  //iEvent.getByLabel("calibratedElectrons" ,"eneErrorRegForGsfEle", calibEnergyErrH);
-  //const edm::ValueMap<double>* calibEnergyErr = calibEnergyErrH.product();
+  edm::Handle<edm::ValueMap<double>> calibEnergyErrH;
+  iEvent.getByLabel("calibratedElectrons" ,"eneErrorRegForGsfEle", calibEnergyErrH);
+  const edm::ValueMap<double>* calibEnergyErr = calibEnergyErrH.product();
   
-  //edm::Handle<edm::ValueMap<double>> corrEnergyH;
-  //iEvent.getByLabel("eleRegressionEnergy" ,"eneRegForGsfEle", corrEnergyH);
-  //const edm::ValueMap<double>* corrEnergy = corrEnergyH.product();
+  edm::Handle<edm::ValueMap<double>> corrEnergyH;
+  iEvent.getByLabel("eleRegressionEnergy" ,"eneRegForGsfEle", corrEnergyH);
+  const edm::ValueMap<double>* corrEnergy = corrEnergyH.product();
   
-  //edm::Handle<edm::ValueMap<double>> corrEnergyErrH;
-  //iEvent.getByLabel("eleRegressionEnergy" ,"eneErrorRegForGsfEle", corrEnergyErrH);
-  //const edm::ValueMap<double>* corrEnergyErr = corrEnergyErrH.product();
+  edm::Handle<edm::ValueMap<double>> corrEnergyErrH;
+  iEvent.getByLabel("eleRegressionEnergy" ,"eneErrorRegForGsfEle", corrEnergyErrH);
+  const edm::ValueMap<double>* corrEnergyErr = corrEnergyErrH.product();
 
   edm::Handle<reco::ConversionCollection> hConversions;
   iEvent.getByLabel(conversionColl, hConversions);
@@ -656,8 +621,8 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //double rho = *(rhoHandle.product());
   
   // transient track builder needed for ele ID MVA
-  //iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder_);  
-  //const TransientTrackBuilder thebuilder = *(trackBuilder_.product());
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder_);  
+  const TransientTrackBuilder thebuilder = *(trackBuilder_.product());
   
   /*
   edm::Handle<reco::PFCandidateCollection> pfHandle;
@@ -862,15 +827,15 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       el_regr_energyerr[el_n] = cor.second;
     }
     
-    //reco::GsfElectronRef calibEleRef(calibEleH, std::distance(elH->begin(), igsf));
+    reco::GsfElectronRef calibEleRef(calibEleH, std::distance(elH->begin(), igsf));
     reco::GsfElectronRef myElectronRef(elH, std::distance(elH->begin(), igsf));
-    el_corr_energy[el_n]     = 0;//(*corrEnergy)[myElectronRef];
-    el_corr_energyerr[el_n]  = 0;//(*corrEnergyErr)[myElectronRef];
-    el_calib_energy[el_n]    = 0;//(*calibEnergy)[calibEleRef];
-    el_calib_energyerr[el_n] = 0;//(*calibEnergyErr)[calibEleRef];
+    el_corr_energy[el_n]     = (*corrEnergy)[myElectronRef];
+    el_corr_energyerr[el_n]  = (*corrEnergyErr)[myElectronRef];
+    el_calib_energy[el_n]    = (*calibEnergy)[calibEleRef];
+    el_calib_energyerr[el_n] = (*calibEnergyErr)[calibEleRef];
 
-    //new ((*el_p4_corr)[el_n]) TLorentzVector();
-    //((TLorentzVector *)el_p4_corr->At(el_n))->SetXYZT(calibEleRef->px(), calibEleRef->py(), calibEleRef->pz(), calibEleRef->energy());
+    new ((*el_p4_corr)[el_n]) TLorentzVector();
+    ((TLorentzVector *)el_p4_corr->At(el_n))->SetXYZT(calibEleRef->px(), calibEleRef->py(), calibEleRef->pz(), calibEleRef->energy());
 
     // ES variables
     el_eseffsixix[el_n] = 0.;
@@ -1046,20 +1011,17 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       bchits.push_back((egsf.superCluster()->seed()->hitsAndFractions())[j].first);
     el_bchits->push_back(bchits);
 
-    //el_mva_noiso[el_n] = egsf.mva();
-    //el_mva[el_n] = mvaEstimator->mva(egsf, vtxH->size());
+    el_mva_nontrig[el_n] = myMVANonTrig->mvaValue(egsf, 
+						  vtxH->front(), 
+						  thebuilder,
+						  ecalLazyTool,
+						  false);
     
-    el_mva_nontrig[el_n] = 0; //myMVANonTrig->mvaValue(egsf, 
-    //		    vtxH->front(), 
-    //					    thebuilder,
-    //					    ecalLazyTool,
-    //					    false);
-       
-    el_mva_trig[el_n] = 0;//myMVATrig->mvaValue(egsf,
-    //	      vtxH->front(),
-    //				      thebuilder,
-    //				      ecalLazyTool,
-    //				      false);
+    el_mva_trig[el_n] = myMVATrig->mvaValue(egsf,
+					    vtxH->front(),
+					    thebuilder,
+					    ecalLazyTool,
+					    false);
     
     //std::cout<<"el_n el_mva_trig el_mva_nontrig "<<el_n<<" "<<el_mva_trig[el_n]<<" "<<el_mva_nontrig[el_n]<<std::endl;
 
@@ -1101,7 +1063,7 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     el_tkdrv[el_n] = egsf.trackerDrivenSeed();
     
     el_pfiso_charged[el_n] = egsf.pfIsolationVariables().chargedHadronIso;//(*(electronIsoVals[0].product()))[myElectronRef]; //
-    el_pfiso_photon[el_n]  = egsf.pfIsolationVariables().photonIso 	 ;//(*(electronIsoVals[1].product()))[myElectronRef]; //
+    el_pfiso_photon[el_n]  = egsf.pfIsolationVariables().photonIso	 ;//(*(electronIsoVals[1].product()))[myElectronRef]; //
     el_pfiso_neutral[el_n] = egsf.pfIsolationVariables().neutralHadronIso;//(*(electronIsoVals[2].product()))[myElectronRef]; //
 
     el_tkiso04[el_n]   = egsf.dr04TkSumPt();
@@ -1179,11 +1141,6 @@ std::pair<unsigned int, float> GlobeElectrons::sharedHits(const reco::Track& tra
   float fraction = (float) shared/std::min(trackA.found(),trackB.found());
   return std::make_pair(shared,fraction);
 }
-
-
-
-
-
 
 
 
