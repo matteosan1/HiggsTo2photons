@@ -49,17 +49,12 @@ class GlobeEcalClusters {
   bool analyze(const edm::Event&, const edm::EventSetup&);
 
 protected:
-  void analyzeBarrelSuperClusters();
-
-  void analyzeEndcapSuperClusters();
-
-  void analyzeEndcapBasicClusters();
-
-  void analyzeBarrelHybridClusters();
+  void analyzeSuperClusters(edm::Handle<reco::SuperClusterCollection> scH, edm::Handle<reco::BasicClusterCollection> bcH, bool isBarrel, int type);
+  void analyzeBasicClusters(edm::Handle<reco::BasicClusterCollection> bcH, int type);
+  void fillBasicCluster(reco::BasicClusterRef bc, int type);
 
 public:
 
-  void e2xNOe5xN(float&, float&, const reco::SuperCluster*, const EcalRecHitCollection*, const CaloSubdetectorTopology*);
   std::vector<float> getESHits(double X, double Y, double Z, std::map<DetId, EcalRecHit> rechits_map, const CaloGeometry& geometry, CaloSubdetectorTopology *topology_p, int row=0);
   std::vector<float> getESShape(std::vector<float> ESHits0);
 
@@ -92,38 +87,19 @@ public:
   // variables for the output ROOT tree 
   //----------------------------------------
 
-// SUPER CLUSTERS
+  // SUPER CLUSTERS
   TClonesArray *sc_p4;
-  TClonesArray *sc_islbar_p4;
   TClonesArray *sc_xyz;
-  TClonesArray *sc_islbar_xyz;
   TClonesArray *bc_p4;
   TClonesArray *bc_xyz;
 
-  //Island in barrel
-  Int_t sc_islbar_n;
-  Float_t sc_islbar_raw[MAX_SUPERCLUSTERS];
-
-//CHECK, bad name, it is the energy??? DO WE NEED THIS? WE HAVE THE INDEX TO THE SEED CLUSTER
-  Float_t sc_islbar_seedenergy[MAX_SUPERCLUSTERS];
-
-  Int_t sc_islbar_nbc[MAX_SUPERCLUSTERS];
-
-  Int_t sc_islbar_bcseedind[MAX_SUPERCLUSTERS];
-  Int_t sc_islbar_bcind[MAX_SUPERCLUSTERS][MAX_SUPERCLUSTER_BASICCLUSTERS];
-
   Int_t sc_n;
-  Int_t sc_hybrid_n;
-  Int_t sc_islend_n;
   Float_t sc_pre[MAX_SUPERCLUSTERS];
   Float_t sc_raw[MAX_SUPERCLUSTERS];
   Int_t sc_nbc[MAX_SUPERCLUSTERS];
   Int_t sc_bcseedind[MAX_SUPERCLUSTERS];
   Int_t sc_bcind[MAX_SUPERCLUSTERS][MAX_SUPERCLUSTER_BASICCLUSTERS];
   Int_t sc_barrel[MAX_SUPERCLUSTERS];
-  Float_t sc_2xN[MAX_SUPERCLUSTERS];
-  Float_t sc_5xN[MAX_SUPERCLUSTERS];
-  Float_t sc_sieie[MAX_SUPERCLUSTERS];
   Float_t sc_sphi[MAX_SUPERCLUSTERS];
   Float_t sc_seta[MAX_SUPERCLUSTERS];
   Float_t sc_brem[MAX_SUPERCLUSTERS];
@@ -133,12 +109,9 @@ public:
 
   // BASIC CLUSTERS
   Int_t bc_n;
-  Int_t bc_hybrid_n;
-  Int_t bc_islbar_n;
-  Int_t bc_islend_n;
   Int_t bc_nhits[MAX_BASICCLUSTERS];
   Int_t bc_type[MAX_BASICCLUSTERS];
-
+  
   /** first index is the basic cluster index, second index
       is the index of the rechit within this basic cluster,
       value is the detid of the rechit belonging to this
@@ -146,31 +119,15 @@ public:
   // Int_t bc_hitdetid[bc_n][MAX_ECALRECHITS];
   std::vector<std::vector<Int_t> > *bc_hitdetid;
 
-  //Float_t bc_rook[MAX_BASICCLUSTERS];
   Float_t bc_s1[MAX_BASICCLUSTERS];
   Float_t bc_s4[MAX_BASICCLUSTERS];
   Float_t bc_s9[MAX_BASICCLUSTERS];
   Float_t bc_s25[MAX_BASICCLUSTERS];
-  //Float_t bc_hoe[MAX_BASICCLUSTERS];
-  //Float_t bc_radius[MAX_BASICCLUSTERS];
-  //Float_t bc_z[MAX_BASICCLUSTERS];
   Float_t bc_sipip[MAX_BASICCLUSTERS];
   Float_t bc_sieie[MAX_BASICCLUSTERS];
   Float_t bc_sieip[MAX_BASICCLUSTERS];
   Float_t bc_chx[MAX_BASICCLUSTERS];
   
-  Float_t bc_s1x5_0[MAX_BASICCLUSTERS];
-  Float_t bc_s1x5_1[MAX_BASICCLUSTERS];
-  Float_t bc_s1x5_2[MAX_BASICCLUSTERS];
-  Float_t bc_s1x3_0[MAX_BASICCLUSTERS];
-  Float_t bc_s1x3_1[MAX_BASICCLUSTERS];
-  Float_t bc_s1x3_2[MAX_BASICCLUSTERS];
-  Float_t bc_s5x1_0[MAX_BASICCLUSTERS];
-  Float_t bc_s5x1_1[MAX_BASICCLUSTERS];
-  Float_t bc_s5x1_2[MAX_BASICCLUSTERS];
-  Float_t bc_s3x1_0[MAX_BASICCLUSTERS];
-  Float_t bc_s3x1_1[MAX_BASICCLUSTERS];
-  Float_t bc_s3x1_2[MAX_BASICCLUSTERS];
   Float_t bc_2x5_max[MAX_BASICCLUSTERS];
   Float_t bc_5x1_sam[MAX_BASICCLUSTERS];
   Int_t bc_seed[MAX_BASICCLUSTERS];
@@ -178,13 +135,13 @@ public:
  private:
   const char* nome;
   GlobeCuts *gCUT;
-
-// SUPER CLUSTERS
+  
+  // SUPER CLUSTERS
   edm::InputTag hybridSuperClusterColl; 
   edm::InputTag barrelSuperClusterColl; 
   edm::InputTag endcapSuperClusterColl; 
 
-// BASIC CLUSTERS
+  // BASIC CLUSTERS
   edm::InputTag barrelHybridClusterColl; 
   edm::InputTag barrelBasicClusterColl; 
   edm::InputTag endcapBasicClusterColl; 

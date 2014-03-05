@@ -7,8 +7,8 @@ readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring() 
 source = cms.Source ("PoolSource",fileNames = readFiles)
 readFiles.extend( (
-    '/store/relval/CMSSW_5_3_9/RelValZEE/GEN-SIM-RECO/PU_START53_V15A_runMC-v2/00000/40368DF5-2A9D-E211-9817-003048CBA446.root',
-    #'file:/afs/cern.ch/work/c/capalmer/private/h2g/2012analysis/524p4_pickeventsv2/src/PhysicsTools/Utilities/crab_0_120702_173500/res/pickevents_2_1_jbQ.root',
+        '/store/relval/CMSSW_6_2_5_cand1/RelValTTbar_13/GEN-SIM-RECO/PU_POSTLS162_V1_pu40bx50-v2/00000/8804A4DC-1F61-E311-900C-0025905A612E.root',
+        #'file:/afs/cern.ch/work/c/capalmer/private/h2g/2012analysis/524p4_pickeventsv2/src/PhysicsTools/Utilities/crab_0_120702_173500/res/pickevents_2_1_jbQ.root',
     #'file:/afs/cern.ch/work/c/capalmer/private/h2g/2012analysis/524p4_pickeventsv2/src/PhysicsTools/Utilities/crab_0_120702_173500/res/pickevents_3_1_iEo.root',
     #'file:/afs/cern.ch/work/c/capalmer/private/h2g/2012analysis/524p4_pickeventsv2/src/PhysicsTools/Utilities/crab_0_120702_173500/res/pickevents_1_1_F8z.root',
     #'file:/afs/cern.ch/work/c/capalmer/private/h2g/2012analysis/524p4_pickeventsv2/src/PhysicsTools/Utilities/crab_0_120702_173500/res/pickevents_6_1_uGh.root',
