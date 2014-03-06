@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define TIMINGDEBUG 0
+#define TIMINGDEBUG 10
 
 static string memory_usage() {
   ostringstream mem;

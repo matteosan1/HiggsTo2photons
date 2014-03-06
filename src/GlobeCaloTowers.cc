@@ -11,12 +11,12 @@ GlobeCaloTowers::GlobeCaloTowers(const edm::ParameterSet& iConfig, const char* n
 }
 
 void GlobeCaloTowers::defineBranch(GlobeAnalyzer* ana) {
-    
+  
   ana->Branch("ct_n", &ct_n, "ct_n/I");
   
   ct_p4 = new TClonesArray("TLorentzVector", MAX_CALOTOWERS);
   ana->Branch("ct_p4", "TClonesArray", &ct_p4, 32000, 0);
-
+  
   ana->Branch("ct_emEnergy", &ct_emEnergy, "ct_emEnergy[ct_n]/F");
   ana->Branch("ct_hadEnergy", &ct_hadEnergy, "ct_hadEnergy[ct_n]/F");
   ana->Branch("ct_outerEnergy", &ct_outerEnergy, "ct_outerEnergy[ct_n]/F");
