@@ -209,13 +209,25 @@ h2ganalyzer = cms.EDAnalyzer(
     HLTParameters = cms.PSet(
     useSecondaryTrigger = cms.bool(False),
     PrimaryTriggerResultsTag   = cms.InputTag("TriggerResults"      ,"","HLT"),
-    TriggerResultsTag          = cms.InputTag("hltTriggerSummaryAOD","","HLT")
+    TriggerResultsTag          = cms.InputTag("hltTriggerSummaryAOD","","HLT"),
+    TriggerFilters             = cms.vstring(
+    "hltEG26CaloId10Iso50HcalIsoLastFilter",
+    "hltEG26R9Id85LastFilter",
+    "hltEG18R9Id85LastFilterUnseeded",
+    "hltEG18CaloId10Iso50TrackIsoLastFilterUnseeded",
+    "hltEG36CaloId10Iso50HcalIsoLastFilter",
+    "hltEG36R9Id85LastFilter",
+    "hltEG22R9Id85LastFilterUnseeded",
+    "hltEG22CaloId10Iso50TrackIsoLastFilterUnseeded",
+    "hltEle32CaloIdTCaloIsoTTrkIdTTrkIsoTSC17PMMassFilter",
+    "hltEle32CaloIdTCaloIsoTTrkIdTTrkIsoTSC17TrackIsoFilter",
+    "hltEG10R9Id85LastFilterUnseeded",
+    "hltEG10CaloId10Iso50TrackIsoLastFilterUnseeded",
+    "hltEle17TightIdLooseIsoEle8TightIdLooseIsoTrackIsoFilter",
+    "hltEle17TightIdLooseIsoEle8TightIdLooseIsoTrackIsoDoubleFilter",
+    "hltEle17CaloIdVTCaloIsoVTTrkIdTTrkIsoVTEle8PMMassFilter",
+    "hltEle17CaloIdVTCaloIsoVTTrkIdTTrkIsoVTEle8TrackIsoFilter")
     ),
-    # Use this in case 2 different HLTs are stored, like 8e29 and 1e31
-    # useSecondaryTrigger = cms.bool(True),
-    # PrimaryTriggerResultsTag   = cms.InputTag("TriggerResults"      ,"","HLT8E29"),
-    # SecondaryTriggerResultsTag = cms.InputTag("TriggerResults"      ,"","HLT"    ),
-    # TriggerResultsTag          = cms.InputTag("hltTriggerSummaryAOD","","HLT8E29")),
     
     # CUTS
     hggPhotonIDConfiguration = cms.PSet(hggPhotonIDCuts),
@@ -305,8 +317,8 @@ h2ganalyzer = cms.EDAnalyzer(
     doGenVertices = cms.bool(True),
     
     doGenJet_algo1 = cms.bool(True),
-    doGenJet_algo2 = cms.bool(True),
-    doGenJet_algo3 = cms.bool(True),
+    doGenJet_algo2 = cms.bool(False),
+    doGenJet_algo3 = cms.bool(False),
 
     doGenMet = cms.bool(True),
     

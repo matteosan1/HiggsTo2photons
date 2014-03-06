@@ -582,7 +582,8 @@ void GlobeAnalyzer::beginJob() {
 
   common->defineBranch(this);
   common->defineLumiBranch(lumitree);
-  
+  hlt->definePathBranch(tree2);
+
   if (doPhoton)
     photons->defineBranch(this);
 
