@@ -6,7 +6,7 @@
 GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig, const char* n): nome(n) {
 
   char a[100];
-  sprintf(a, "ElectronColl_%s", nome);
+  sprintf(a, "ElectronColl%s", nome);
 
   debug_level = iConfig.getParameter<int>("Debug_Level");
   doAodSim = iConfig.getParameter<bool>("doAodSim");

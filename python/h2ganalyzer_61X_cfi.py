@@ -111,9 +111,9 @@ h2ganalyzer = cms.EDAnalyzer(
     TrackColl3 = cms.InputTag("electronGsfTracks"),
     AssocLabel = cms.string('TrackAssociatorByHits'),
     
-    ElectronColl_std = cms.InputTag("gsfElectrons"),        
-    eIDLabels        = cms.VInputTag(cms.InputTag("eidLoose"),
-                                     cms.InputTag("eidTight")),
+    ElectronColl  = cms.InputTag("gsfElectrons"),        
+    eIDLabels     = cms.VInputTag(cms.InputTag("eidLoose"),
+                                  cms.InputTag("eidTight")),
     #electronMVAWeightFileName =  cms.FileInPath("RecoEgamma/ElectronIdentification/data/TMVA_BDTSimpleCat_17Feb2011.weights.xml"),
 
     electronNonTrigMVAWeightFileNames = cms.vstring("EgammaAnalysis/ElectronTools/data/Electrons_BDTG_NonTrigV0_Cat1.weights.xml",
@@ -345,13 +345,13 @@ h2ganalyzer = cms.EDAnalyzer(
     doGsfTracks = cms.bool(True),
 
     doVertices_std = cms.bool(True),
-    doVertices_nobs = cms.bool(True),
+    doVertices_nobs = cms.bool(False),
     
-    doElectron_std = cms.bool(True),
+    doElectron = cms.bool(True),
     doMuon = cms.bool(True),
     doPhoton = cms.bool(True),
     doAllConversions = cms.bool(True),
-    doLeptons = cms.bool(True),
+    doLeptons = cms.bool(False),
     
     doJet_algo1 = cms.bool(False),
     doJet_algo2 = cms.bool(False),
@@ -366,7 +366,7 @@ h2ganalyzer = cms.EDAnalyzer(
     doMet = cms.bool(True),
     dotcMet = cms.bool(True),
     doPFMet = cms.bool(True),
-    doHt = cms.bool(True),
+    doHt = cms.bool(False),
     
     doRho = cms.bool(True),
     doPileup = cms.bool(True),

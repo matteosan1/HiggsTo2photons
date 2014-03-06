@@ -10,6 +10,7 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeMuons.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeTracks.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobePhotons.h"
+#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeEcalHits.h"
 
 #include "TTree.h"
 #include "TClonesArray.h"
@@ -24,7 +25,7 @@ class GlobePFCandidates {
   virtual ~GlobePFCandidates() {};
 
   void defineBranch(GlobeAnalyzer* ana);
-  bool analyze(const edm::Event&, const edm::EventSetup&, GlobeTracks*, GlobeMuons*, GlobePhotons*);
+  bool analyze(const edm::Event&, const edm::EventSetup&, GlobeTracks*, GlobeMuons*, GlobePhotons*, GlobeEcalHits*);
 
   // variables
   Int_t pfcand_n;

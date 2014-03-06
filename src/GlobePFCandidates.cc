@@ -22,7 +22,7 @@
 GlobePFCandidates::GlobePFCandidates(const edm::ParameterSet& iConfig) {
   
   pfColl = iConfig.getParameter<edm::InputTag>("PFCandidateColl");
-  electronCollStd = iConfig.getParameter<edm::InputTag>("ElectronColl_std");
+  electronCollStd = iConfig.getParameter<edm::InputTag>("ElectronColl");
   photonCollStd =  iConfig.getParameter<edm::InputTag>("PhotonCollStd");
   PFIsoOuterConeSize = iConfig.getParameter<double>("PFIsoOuterCone");
   debug_level = iConfig.getParameter<int>("Debug_Level");
@@ -64,7 +64,7 @@ void GlobePFCandidates::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("pfcand_hitind", "std::vector<std::vector<short> > ", &pfcand_hitind);
 }
 
-bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup, GlobeTracks* tks, GlobeMuons* mus, GlobePhotons* phos) {
+bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup, GlobeTracks* tks, GlobeMuons* mus, GlobePhotons* phos, GlobeEcalHits* hits) {
 
   pfcand_hitind->clear();
   pfcand_p4->Clear(); 
@@ -163,14 +163,21 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
     }
 
     if (save) {
-      std::vector<short> hits;
+      std::vector<short> ecalhits;
       reco::SuperClusterRef scRef = it->superClusterRef();
       std::vector< std::pair<DetId, float> >::const_iterator itSC;
       if (scRef.isNonnull()) {
-	for (itSC=scRef->hitsAndFractions().begin(); itSC != scRef->hitsAndFractions().end(); ++itSC) {
-	  //std::cout << itSC->first.rawId() << " " << itSC->second << std::endl;
+	for (int i=0; i < hits->ecalhit_n; i++) {
+	  for (itSC=scRef->hitsAndFractions().begin(); itSC != scRef->hitsAndFractions().end(); ++itSC) {
+	    if (hits->ecalhit_detid[i] == itSC->first.rawId()) {
+	      ecalhits.push_back(i);
+	      break;
+	    }
+	  }
 	}
       }
+      pfcand_hitind->push_back(ecalhits);
+
       pfcand_pdgid[pfcand_n] = it->particleId();
       pfcand_ecalEnergy[pfcand_n] = it->ecalEnergy();
       pfcand_hcalEnergy[pfcand_n] = it->hcalEnergy();

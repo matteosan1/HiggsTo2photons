@@ -119,7 +119,7 @@ public:
   GlobeTracks* tracks;
   GlobeGsfTracks* gsfTracks;
   GlobeTrackingParticles* trackingParticles;
-  GlobeElectrons* std_electrons; //, *gge_electrons;
+  GlobeElectrons* electrons; //, *gge_electrons;
   GlobeMuons* global_muons, *tk_muons, *sta_muons, *muons;
   GlobeJets* algo1_jets, *algo2_jets, *algo3_jets, *algoPF1_jets, *algoPF2_jets, *algoPF3_jets ;
   GlobeGenerator* gen;
@@ -163,7 +163,7 @@ private:
 
   int debug_level;
 
-  bool doElectronStd;
+  bool doElectron;
   bool doPFCandidates;
   bool doMuon;
   bool doMuonGlobal;

@@ -16,7 +16,7 @@ GlobeGsfTracks::GlobeGsfTracks(const edm::ParameterSet& iConfig, const char* n):
   tpColl       = iConfig.getParameter<edm::InputTag>("TPColl");
   assocLabel   = iConfig.getParameter<std::string>("AssocLabel");
   debug_level  = iConfig.getParameter<int>("Debug_Level");
-  electronColl = iConfig.getParameter<edm::InputTag>("ElectronColl_std");
+  electronColl = iConfig.getParameter<edm::InputTag>("ElectronColl");
 
   // get cut thresholds
   gCUT = new GlobeCuts(iConfig);

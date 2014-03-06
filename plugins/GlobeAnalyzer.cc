@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define TIMINGDEBUG 10
+#define TIMINGDEBUG 0
 
 static string memory_usage() {
   ostringstream mem;
@@ -41,7 +41,7 @@ GlobeAnalyzer::GlobeAnalyzer(const edm::ParameterSet& iConfig) {
 
   globalCountersNames = iConfig.getParameter<std::vector<std::string> >("globalCounters");
 
-  doElectronStd = iConfig.getParameter<bool>("doElectron_std");
+  doElectron = iConfig.getParameter<bool>("doElectron");
   doMuon = iConfig.getParameter<bool>("doMuon");
   doJetAlgo1 = iConfig.getParameter<bool>("doJet_algo1");
   doJetAlgo2 = iConfig.getParameter<bool>("doJet_algo2");
@@ -138,12 +138,12 @@ GlobeAnalyzer::GlobeAnalyzer(const edm::ParameterSet& iConfig) {
     photons = 0;
 
   if (doAllConversions)
-    allConversions = new GlobeConversions(iConfig, "std");
+    allConversions = new GlobeConversions(iConfig, "");
 
-  if (doElectronStd)
-    std_electrons = new GlobeElectrons(iConfig, "std");
+  if (doElectron)
+    electrons = new GlobeElectrons(iConfig, "");
   else
-    std_electrons = 0;
+    electrons = 0;
 
   if (doMuon)
     muons = new GlobeMuons(iConfig);
@@ -201,21 +201,21 @@ GlobeAnalyzer::GlobeAnalyzer(const edm::ParameterSet& iConfig) {
 
   if (doLeptons)
     leptons = new GlobeLeptons();
-  if (!doMuon or !doElectronStd or !doPhoton) {
+  if (!doMuon or !doElectron or !doPhoton) {
     std::cout << "WARNING: doLeptons needs doMuons, doElectronStd and doPhoton true" << std::endl;
     doLeptons = false;
   }
   
   if (doEcalRecHits)
     ecalrechits = new GlobeEcalHits(iConfig); 
-  if (!doElectronStd and !doMuon and !doPhoton) {
+  if (!doElectron and !doMuon and !doPhoton) {
     std::cout << "WARNING: EcalRecHits needs Electrons, Muons or Photons." << std::endl;
     doEcalRecHits = false;
   }
   
   if (doHcal)
     hcalhits = new GlobeHcal(iConfig);
-  if (!doElectronStd and !doMuon and !doPhoton) {
+  if (!doElectron and !doMuon and !doPhoton) {
     std::cout << "WARNING: HcalRecHits needs Electrons, Muons and Photons." << std::endl;
     doHcal = false;
   }
@@ -273,9 +273,9 @@ void GlobeAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   }
 
   //ELECTRONS
-  if(debug_level > 2) std::cout << "GlobeAnalyzer: std_electrons" << std::endl;
-  if (doElectronStd)
-    std_electrons->analyze(iEvent, iSetup);
+  if(debug_level > 2) std::cout << "GlobeAnalyzer: electrons" << std::endl;
+  if (doElectron)
+    electrons->analyze(iEvent, iSetup);
   
   if (TIMINGDEBUG) {
     t=clock();
@@ -305,8 +305,8 @@ void GlobeAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   
   if(debug_level > 2) 
     std::cout << "GlobeAnalyzer: leptons->addelectrons" << std::endl;
-  if(doElectronStd && doLeptons)
-    leptons->addElectrons(std_electrons);
+  if(doElectron && doLeptons)
+    leptons->addElectrons(electrons);
   
   if(debug_level > 2) std::cout << "GlobeAnalyzer: leptons->addphotons" << std::endl;
   if(doPhoton && doLeptons)
@@ -384,7 +384,7 @@ void GlobeAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   //ECAL REC HITS
   if(debug_level > 2) std::cout << "GlobeAnalyzer: ecalrechits" << std::endl;
   if (doEcalRecHits)
-    ecalrechits->analyze(iEvent, iSetup, std_electrons, muons, photons);
+    ecalrechits->analyze(iEvent, iSetup, electrons, muons, photons);
   
   if (TIMINGDEBUG) {
     t=clock();
@@ -406,7 +406,7 @@ void GlobeAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   //HCAL HITS
   if(debug_level > 2) std::cout << "GlobeAnalyzer: hcalhits" << std::endl;
   if (doHcal)
-    hcalhits->analyze(iEvent, iSetup, std_electrons, muons, photons);
+    hcalhits->analyze(iEvent, iSetup, electrons, muons, photons);
   
   //CALO TOWERS
   if(debug_level > 2) std::cout << "GlobeAnalyzer: calotowers" << std::endl;
@@ -521,13 +521,13 @@ void GlobeAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   }
 
   // PF CANDIDATES
-  if (doPFCandidates)
-    pfCandidates->analyze(iEvent, iSetup, tracks, muons, photons);
+  if (doPFCandidates && doEcalRecHits)
+    pfCandidates->analyze(iEvent, iSetup, tracks, muons, photons, ecalrechits);
 
   //PAT
   //if (doPAT) {
   //  if(debug_level > 2) std::cout << "GlobeAnalyzer: PAT" << std::endl;
-  //  pat->analyze(iEvent, iSetup, std_electrons, photons, algo1_jets);
+  //  pat->analyze(iEvent, iSetup, electrons, photons, algo1_jets);
   //}
 
   if (doRho) {
@@ -546,9 +546,9 @@ void GlobeAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     std::cout << "GlobeAnalyzer: selectorbits" << std::endl;
 
   if (doGenParticles || doGenerator)
-    selector_bits = selector->select(std_electrons, muons, photons, gen, leptons, reducedgen).to_ulong();
+    selector_bits = selector->select(electrons, muons, photons, gen, leptons, reducedgen).to_ulong();
   else
-    selector_bits = selector->select(std_electrons, muons, photons).to_ulong();
+    selector_bits = selector->select(electrons, muons, photons).to_ulong();
   
   if(debug_level > 2) 
     std::cout << "GlobeAnalyzer: selectorbits = " << selector_bits << std::endl;
@@ -638,8 +638,8 @@ void GlobeAnalyzer::beginJob() {
   if (doTrackingParticles)
     trackingParticles->defineBranch(this);
  
-  if (doElectronStd)
-    std_electrons->defineBranch(this);
+  if (doElectron)
+    electrons->defineBranch(this);
  
   if (doMuon)
     muons->defineBranch(this);
