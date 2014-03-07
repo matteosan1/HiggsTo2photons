@@ -11,15 +11,15 @@
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
 #include "DataFormats/EgammaCandidates/interface/PhotonPi0DiscriminatorAssociation.h"
-
+#include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgoRcd.h"
 #include "DataFormats/EgammaTrackReco/interface/TrackCaloClusterAssociation.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "RecoParticleFlow/PFClusterTools/interface/PFClusterWidthAlgo.h"
 //#include "HiggsAnalysis/HiggsTo2photons/interface/pfFrixioneIso.h"
 //#include "HiggsAnalysis/HiggsToGammaGamma/interface/PhotonFix.h"
-#include "HiggsAnalysis/HiggsTo2photons/interface/PFIsolation.h"
-#include "HiggsAnalysis/HiggsTo2photons/interface/Mustache.h"
+//#include "HiggsAnalysis/HiggsTo2photons/interface/PFIsolation.h"
+//#include "HiggsAnalysis/HiggsTo2photons/interface/Mustache.h"
 //#include "RecoEgamma/EgammaTools/interface/ggPFPhotons.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "TFile.h"
@@ -57,8 +57,9 @@ GlobePhotons::~GlobePhotons() {
   }
 }
 
-GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nome(n) {
-
+GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, std::string n) {
+  
+  prefix = n;
   isInitialized = false;
 
   debug_level = iConfig.getParameter<int>("Debug_Level");
@@ -91,15 +92,15 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nom
   //hcalHitColl = iConfig.getParameter<edm::InputTag>("HcalHitsBEColl");
   pfColl = iConfig.getParameter<edm::InputTag>("PFCandidateColl");
 
-  edm::ParameterSet isoVals03  = iConfig.getParameter<edm::ParameterSet> ("isolationValues03");
-  inputTagIsoVals03_.push_back(isoVals03.getParameter<edm::InputTag>("pfChargedHadrons"));
-  inputTagIsoVals03_.push_back(isoVals03.getParameter<edm::InputTag>("pfPhotons"));
-  inputTagIsoVals03_.push_back(isoVals03.getParameter<edm::InputTag>("pfNeutralHadrons"));
-  
-  edm::ParameterSet isoVals04  = iConfig.getParameter<edm::ParameterSet> ("isolationValues04");
-  inputTagIsoVals04_.push_back(isoVals04.getParameter<edm::InputTag>("pfChargedHadrons"));
-  inputTagIsoVals04_.push_back(isoVals04.getParameter<edm::InputTag>("pfPhotons"));
-  inputTagIsoVals04_.push_back(isoVals04.getParameter<edm::InputTag>("pfNeutralHadrons"));
+  //edm::ParameterSet isoVals03  = iConfig.getParameter<edm::ParameterSet> ("isolationValues03");
+  //inputTagIsoVals03_.push_back(isoVals03.getParameter<edm::InputTag>("pfChargedHadrons"));
+  //inputTagIsoVals03_.push_back(isoVals03.getParameter<edm::InputTag>("pfPhotons"));
+  //inputTagIsoVals03_.push_back(isoVals03.getParameter<edm::InputTag>("pfNeutralHadrons"));
+  //
+  //edm::ParameterSet isoVals04  = iConfig.getParameter<edm::ParameterSet> ("isolationValues04");
+  //inputTagIsoVals04_.push_back(isoVals04.getParameter<edm::InputTag>("pfChargedHadrons"));
+  //inputTagIsoVals04_.push_back(isoVals04.getParameter<edm::InputTag>("pfPhotons"));
+  //inputTagIsoVals04_.push_back(isoVals04.getParameter<edm::InputTag>("pfNeutralHadrons"));
 
   energyCorrectionsFromDB = iConfig.getParameter<bool> ("energyCorrectionsFromDB"); 
   energyRegFilename       = iConfig.getParameter<std::string> ("energyCorrectionsFileNamePho"); 
@@ -137,11 +138,11 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nom
   if (haveTowers) {
     hcalCfg.hOverEConeSize = 0.15;
     hcalCfg.useTowers = true;
-    hcalCfg.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
+    hcalCfg.hcalTowers = consumes<CaloTowerCollection>(iConfig.getParameter<edm::InputTag>("CaloTowerColl"));
     hcalCfg.hOverEPtMin = 0;
     hcalCfgPflow.hOverEConeSize = 0.15;
     hcalCfgPflow.useTowers = true ;
-    hcalCfgPflow.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
+    hcalCfgPflow.hcalTowers = consumes<CaloTowerCollection>(iConfig.getParameter<edm::InputTag>("CaloTowerColl"));
     hcalCfgPflow.hOverEPtMin = 0;
     
     hcalHelper = new ElectronHcalHelper(hcalCfg);
@@ -250,37 +251,37 @@ void GlobePhotons::defineBranch(GlobeAnalyzer* ana) {
 
   //ana->Branch("pho_frixiso", "std::vector<std::vector<float> >", &pho_frixiso);  
 
-  ana->Branch("pho_pfconvVtxZ", &pho_pfconvVtxZ, "pho_pfconvVtxZ[pho_n]/F");
-  ana->Branch("pho_pfconvVtxZErr", &pho_pfconvVtxZErr, "pho_pfconvVtxZErr[pho_n]/F");
-  ana->Branch("pho_hasConvPf", &pho_hasConvPf, "pho_hasConvPf[pho_n]/I");
-  ana->Branch("pho_hasSLConvPf", &pho_hasSLConvPf, "pho_hasSLConvPf[pho_n]/I");
-
-  ana->Branch("pho_must", &pho_must, "pho_must[pho_n]/F");
-  ana->Branch("pho_mustnc", &pho_mustnc, "pho_mustnc[pho_n]/I");
-  ana->Branch("pho_pfpresh1", &pho_pfpresh1, "pho_pfpresh1[pho_n]/F");
-  ana->Branch("pho_pfpresh2", &pho_pfpresh2, "pho_pfpresh2[pho_n]/F");
-  ana->Branch("pho_mustenergy", &pho_mustenergy, "pho_mustenergy[pho_n]/F");
-  ana->Branch("pho_mustenergyout", &pho_mustenergyout, "pho_mustenergyout[pho_n]/F");
-  
-  ana->Branch("pho_mustEtout", &pho_mustEtout, "pho_mustEtout[pho_n]/F");
-  ana->Branch("pho_pflowE", &pho_pflowE, "pho_pflowE[pho_n]/F");
-  ana->Branch("pho_pfdeta", &pho_pfdeta, "pho_pfdeta[pho_n]/F");
-  ana->Branch("pho_pfdphi", &pho_pfdphi, "pho_pfdphi[pho_n]/F");
-  ana->Branch("pho_pfclusrms", &pho_pfclusrms, "pho_pfclusrms[pho_n]/F");
-  ana->Branch("pho_pfclusrmsmust", &pho_pfclusrmsmust, "pho_pfclusrmsmust[pho_n]/F");
-  ana->Branch("pho_pfClusECorr", &pho_pfClusECorr, "pho_pfClusECorr[pho_n]/F");  
-  ana->Branch("pho_pfMatch", &pho_pfMatch, "pho_pfMatch[pho_n]/I");
-  ana->Branch("pho_PfEleVeto", &pho_PfEleVeto, "pho_PfEleVeto[pho_n]/I");
-
-  ana->Branch("pho_pfRawEnergy", &pho_pfRawEnergy, "pho_pfRawEnergy[pho_n]/F");
-  ana->Branch("pho_pfe2x2", &pho_pfe2x2, "pho_pfe2x2[pho_n]/F");
-  ana->Branch("pho_pfe3x3", &pho_pfe3x3, "pho_pfe3x3[pho_n]/F");
-  ana->Branch("pho_pfe5x5", &pho_pfe5x5, "pho_pfe5x5[pho_n]/F");
-  ana->Branch("pho_pfsieie", &pho_pfsieie, "pho_pfsieie[pho_n]/F");
-  ana->Branch("pho_pfsieip", &pho_pfsieip, "pho_pfsieip[pho_n]/F");
-  ana->Branch("pho_pfsipip", &pho_pfsipip, "pho_pfsipip[pho_n]/F");
-  ana->Branch("pho_pfemaxxtal", &pho_pfemaxxtal, "pho_pfemaxxtal[pho_n]/F");
-  ana->Branch("pho_pfe2nd", &pho_pfe2nd, "pho_pfe2nd[pho_n]/F");
+  //ana->Branch("pho_pfconvVtxZ", &pho_pfconvVtxZ, "pho_pfconvVtxZ[pho_n]/F");
+  //ana->Branch("pho_pfconvVtxZErr", &pho_pfconvVtxZErr, "pho_pfconvVtxZErr[pho_n]/F");
+  //ana->Branch("pho_hasConvPf", &pho_hasConvPf, "pho_hasConvPf[pho_n]/I");
+  //ana->Branch("pho_hasSLConvPf", &pho_hasSLConvPf, "pho_hasSLConvPf[pho_n]/I");
+  //
+  //ana->Branch("pho_must", &pho_must, "pho_must[pho_n]/F");
+  //ana->Branch("pho_mustnc", &pho_mustnc, "pho_mustnc[pho_n]/I");
+  //ana->Branch("pho_pfpresh1", &pho_pfpresh1, "pho_pfpresh1[pho_n]/F");
+  //ana->Branch("pho_pfpresh2", &pho_pfpresh2, "pho_pfpresh2[pho_n]/F");
+  //ana->Branch("pho_mustenergy", &pho_mustenergy, "pho_mustenergy[pho_n]/F");
+  //ana->Branch("pho_mustenergyout", &pho_mustenergyout, "pho_mustenergyout[pho_n]/F");
+  //
+  //ana->Branch("pho_mustEtout", &pho_mustEtout, "pho_mustEtout[pho_n]/F");
+  //ana->Branch("pho_pflowE", &pho_pflowE, "pho_pflowE[pho_n]/F");
+  //ana->Branch("pho_pfdeta", &pho_pfdeta, "pho_pfdeta[pho_n]/F");
+  //ana->Branch("pho_pfdphi", &pho_pfdphi, "pho_pfdphi[pho_n]/F");
+  //ana->Branch("pho_pfclusrms", &pho_pfclusrms, "pho_pfclusrms[pho_n]/F");
+  //ana->Branch("pho_pfclusrmsmust", &pho_pfclusrmsmust, "pho_pfclusrmsmust[pho_n]/F");
+  //ana->Branch("pho_pfClusECorr", &pho_pfClusECorr, "pho_pfClusECorr[pho_n]/F");  
+  //ana->Branch("pho_pfMatch", &pho_pfMatch, "pho_pfMatch[pho_n]/I");
+  //ana->Branch("pho_PfEleVeto", &pho_PfEleVeto, "pho_PfEleVeto[pho_n]/I");
+  //
+  //ana->Branch("pho_pfRawEnergy", &pho_pfRawEnergy, "pho_pfRawEnergy[pho_n]/F");
+  //ana->Branch("pho_pfe2x2", &pho_pfe2x2, "pho_pfe2x2[pho_n]/F");
+  //ana->Branch("pho_pfe3x3", &pho_pfe3x3, "pho_pfe3x3[pho_n]/F");
+  //ana->Branch("pho_pfe5x5", &pho_pfe5x5, "pho_pfe5x5[pho_n]/F");
+  //ana->Branch("pho_pfsieie", &pho_pfsieie, "pho_pfsieie[pho_n]/F");
+  //ana->Branch("pho_pfsieip", &pho_pfsieip, "pho_pfsieip[pho_n]/F");
+  //ana->Branch("pho_pfsipip", &pho_pfsipip, "pho_pfsipip[pho_n]/F");
+  //ana->Branch("pho_pfemaxxtal", &pho_pfemaxxtal, "pho_pfemaxxtal[pho_n]/F");
+  //ana->Branch("pho_pfe2nd", &pho_pfe2nd, "pho_pfe2nd[pho_n]/F");
 
   ana->Branch("pho_ecalsumetconedr04",&pho_ecalsumetconedr04,"pho_ecalsumetconedr04[pho_n]/F");
   ana->Branch("pho_hcalsumetconedr04",&pho_hcalsumetconedr04,"pho_hcalsumetconedr04[pho_n]/F");
@@ -313,36 +314,36 @@ void GlobePhotons::defineBranch(GlobeAnalyzer* ana) {
   
   ana->Branch("pho_haspixseed",&pho_haspixseed,"pho_haspixseed[pho_n]/I");
   
-  ana->Branch("pho_hasconvtks",&pho_hasconvtks,"pho_hasconvtks[pho_n]/I");
-  ana->Branch("pho_nconv",&pho_nconv,"pho_nconv[pho_n]/I");
-  ana->Branch("pho_conv_ntracks",&pho_conv_ntracks,"pho_conv_ntracks[pho_n]/I");
-  ana->Branch("pho_conv_pairinvmass",&pho_conv_pairinvmass,"pho_conv_pairinvmass[pho_n]/F");
-  ana->Branch("pho_conv_paircotthetasep",&pho_conv_paircotthetasep,"pho_conv_paircotthetasep[pho_n]/F");
-  ana->Branch("pho_conv_eoverp",&pho_conv_eoverp,"pho_conv_eoverp[pho_n]/F");
-  ana->Branch("pho_conv_zofprimvtxfromtrks",&pho_conv_zofprimvtxfromtrks,"pho_conv_zofprimvtxfromtrks[pho_n]/F");
-  ana->Branch("pho_conv_distofminapproach",&pho_conv_distofminapproach,"pho_conv_distofminapproach[pho_n]/F");
-  ana->Branch("pho_conv_dphitrksatvtx",&pho_conv_dphitrksatvtx,"pho_conv_dphitrksatvtx[pho_n]/F");
-  ana->Branch("pho_conv_dphitrksatecal",&pho_conv_dphitrksatecal,"pho_conv_dphitrksatecal[pho_n]/F");
-  ana->Branch("pho_conv_detatrksatecal",&pho_conv_detatrksatecal,"pho_conv_detatrksatecal[pho_n]/F");
-  ana->Branch("pho_conv_tk1_d0",&pho_conv_tk1_d0,"pho_conv_tk1_d0[pho_n]/F");
-  ana->Branch("pho_conv_tk1_pout",&pho_conv_tk1_pout,"pho_conv_tk1_pout[pho_n]/F");
-  ana->Branch("pho_conv_tk1_pin",&pho_conv_tk1_pin,"pho_conv_tk1_pin[pho_n]/F");
-  ana->Branch("pho_conv_tk2_d0",&pho_conv_tk2_d0,"pho_conv_tk2_d0[pho_n]/F");
-  ana->Branch("pho_conv_tk2_pout",&pho_conv_tk2_pout,"pho_conv_tk2_pout[pho_n]/F");
-  ana->Branch("pho_conv_tk2_pin",&pho_conv_tk2_pin,"pho_conv_tk2_pin[pho_n]/F");
-  
-  //added by marco
-  ana->Branch("pho_conv_tk1_dz",&pho_conv_tk1_dz,"pho_conv_tk1_dz[pho_n]/F");
-  ana->Branch("pho_conv_tk2_dz",&pho_conv_tk2_dz,"pho_conv_tk2_dz[pho_n]/F");
-  ana->Branch("pho_conv_tk1_dzerr",&pho_conv_tk1_dzerr,"pho_conv_tk1_dzerr[pho_n]/F");
-  ana->Branch("pho_conv_tk2_dzerr",&pho_conv_tk2_dzerr,"pho_conv_tk2_dzerr[pho_n]/F");
-  ana->Branch("pho_conv_tk1_nh",&pho_conv_tk1_nh,"pho_conv_tk1_nh[pho_n]/I");
-  ana->Branch("pho_conv_tk2_nh",&pho_conv_tk2_nh,"pho_conv_tk2_nh[pho_n]/I");
-  ana->Branch("pho_conv_chi2",&pho_conv_chi2,"pho_conv_chi2[pho_n]/F");
-  ana->Branch("pho_conv_chi2_probability",&pho_conv_chi2_probability,"pho_conv_chi2_probability[pho_n]/F");
-  ana->Branch("pho_conv_ch1ch2",&pho_conv_ch1ch2,"pho_conv_ch1ch2[pho_n]/I");
-  ana->Branch("pho_conv_validvtx",&pho_conv_validvtx,"pho_conv_validvtx[pho_n]/I");
-  ana->Branch("pho_conv_MVALikelihood",&pho_conv_MVALikelihood,"pho_conv_MVALikelihood[pho_n]/I");
+  //ana->Branch("pho_hasconvtks",&pho_hasconvtks,"pho_hasconvtks[pho_n]/I");
+  //ana->Branch("pho_nconv",&pho_nconv,"pho_nconv[pho_n]/I");
+  //ana->Branch("pho_conv_ntracks",&pho_conv_ntracks,"pho_conv_ntracks[pho_n]/I");
+  //ana->Branch("pho_conv_pairinvmass",&pho_conv_pairinvmass,"pho_conv_pairinvmass[pho_n]/F");
+  //ana->Branch("pho_conv_paircotthetasep",&pho_conv_paircotthetasep,"pho_conv_paircotthetasep[pho_n]/F");
+  //ana->Branch("pho_conv_eoverp",&pho_conv_eoverp,"pho_conv_eoverp[pho_n]/F");
+  //ana->Branch("pho_conv_zofprimvtxfromtrks",&pho_conv_zofprimvtxfromtrks,"pho_conv_zofprimvtxfromtrks[pho_n]/F");
+  //ana->Branch("pho_conv_distofminapproach",&pho_conv_distofminapproach,"pho_conv_distofminapproach[pho_n]/F");
+  //ana->Branch("pho_conv_dphitrksatvtx",&pho_conv_dphitrksatvtx,"pho_conv_dphitrksatvtx[pho_n]/F");
+  //ana->Branch("pho_conv_dphitrksatecal",&pho_conv_dphitrksatecal,"pho_conv_dphitrksatecal[pho_n]/F");
+  //ana->Branch("pho_conv_detatrksatecal",&pho_conv_detatrksatecal,"pho_conv_detatrksatecal[pho_n]/F");
+  //ana->Branch("pho_conv_tk1_d0",&pho_conv_tk1_d0,"pho_conv_tk1_d0[pho_n]/F");
+  //ana->Branch("pho_conv_tk1_pout",&pho_conv_tk1_pout,"pho_conv_tk1_pout[pho_n]/F");
+  //ana->Branch("pho_conv_tk1_pin",&pho_conv_tk1_pin,"pho_conv_tk1_pin[pho_n]/F");
+  //ana->Branch("pho_conv_tk2_d0",&pho_conv_tk2_d0,"pho_conv_tk2_d0[pho_n]/F");
+  //ana->Branch("pho_conv_tk2_pout",&pho_conv_tk2_pout,"pho_conv_tk2_pout[pho_n]/F");
+  //ana->Branch("pho_conv_tk2_pin",&pho_conv_tk2_pin,"pho_conv_tk2_pin[pho_n]/F");
+  //
+  ////added by marco
+  //ana->Branch("pho_conv_tk1_dz",&pho_conv_tk1_dz,"pho_conv_tk1_dz[pho_n]/F");
+  //ana->Branch("pho_conv_tk2_dz",&pho_conv_tk2_dz,"pho_conv_tk2_dz[pho_n]/F");
+  //ana->Branch("pho_conv_tk1_dzerr",&pho_conv_tk1_dzerr,"pho_conv_tk1_dzerr[pho_n]/F");
+  //ana->Branch("pho_conv_tk2_dzerr",&pho_conv_tk2_dzerr,"pho_conv_tk2_dzerr[pho_n]/F");
+  //ana->Branch("pho_conv_tk1_nh",&pho_conv_tk1_nh,"pho_conv_tk1_nh[pho_n]/I");
+  //ana->Branch("pho_conv_tk2_nh",&pho_conv_tk2_nh,"pho_conv_tk2_nh[pho_n]/I");
+  //ana->Branch("pho_conv_chi2",&pho_conv_chi2,"pho_conv_chi2[pho_n]/F");
+  //ana->Branch("pho_conv_chi2_probability",&pho_conv_chi2_probability,"pho_conv_chi2_probability[pho_n]/F");
+  //ana->Branch("pho_conv_ch1ch2",&pho_conv_ch1ch2,"pho_conv_ch1ch2[pho_n]/I");
+  //ana->Branch("pho_conv_validvtx",&pho_conv_validvtx,"pho_conv_validvtx[pho_n]/I");
+  //ana->Branch("pho_conv_MVALikelihood",&pho_conv_MVALikelihood,"pho_conv_MVALikelihood[pho_n]/I");
 
   // added by pasquale
   ana->Branch("pho_sipip",&pho_sipip,"pho_sipip[pho_n]/F");
@@ -386,17 +387,17 @@ void GlobePhotons::defineBranch(GlobeAnalyzer* ana) {
   //ana->Branch("pho_id_6cat", &pho_id_6cat, "pho_id_6cat[pho_n][100]/I");  
   //ana->Branch("pho_id_6catpf", &pho_id_6catpf, "pho_id_6catpf[pho_n][100]/I");
    
-  pho_conv_vtx = new TClonesArray("TVector3", MAX_PHOTONS);
-  ana->Branch("pho_conv_vtx", "TClonesArray", &pho_conv_vtx, 32000, 0);
-  pho_conv_pair_momentum = new TClonesArray("TVector3", MAX_PHOTONS);
-  ana->Branch("pho_conv_pair_momentum", "TClonesArray", &pho_conv_pair_momentum, 32000, 0);
-  pho_conv_refitted_momentum = new TClonesArray("TVector3", MAX_PHOTONS);
-  ana->Branch("pho_conv_refitted_momentum", "TClonesArray", &pho_conv_refitted_momentum, 32000, 0);
-  pho_conv_vertexcorrected_p4 = new TClonesArray("TLorentzVector", MAX_PHOTONS);
-  ana->Branch("pho_conv_vertexcorrected_p4", "TClonesArray", &pho_conv_vertexcorrected_p4, 32000, 0);
+  //pho_conv_vtx = new TClonesArray("TVector3", MAX_PHOTONS);
+  //ana->Branch("pho_conv_vtx", "TClonesArray", &pho_conv_vtx, 32000, 0);
+  //pho_conv_pair_momentum = new TClonesArray("TVector3", MAX_PHOTONS);
+  //ana->Branch("pho_conv_pair_momentum", "TClonesArray", &pho_conv_pair_momentum, 32000, 0);
+  //pho_conv_refitted_momentum = new TClonesArray("TVector3", MAX_PHOTONS);
+  //ana->Branch("pho_conv_refitted_momentum", "TClonesArray", &pho_conv_refitted_momentum, 32000, 0);
+  //pho_conv_vertexcorrected_p4 = new TClonesArray("TLorentzVector", MAX_PHOTONS);
+  //ana->Branch("pho_conv_vertexcorrected_p4", "TClonesArray", &pho_conv_vertexcorrected_p4, 32000, 0);
 }
 
-bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   if (debug_level > 9) 
     std::cout << "GlobePhotons: Start analyze" << std::endl;
@@ -413,8 +414,8 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   edm::Handle<reco::PhotonCollection> phoH;
   iEvent.getByLabel(photonCollStd, phoH);
 
-  edm::Handle<reco::PhotonCollection> phoHpf;
-  iEvent.getByLabel(photonCollPf, phoHpf);
+  //edm::Handle<reco::PhotonCollection> phoHpf;
+  //iEvent.getByLabel(photonCollPf, phoHpf);
 
   // take the pi0 rejection info from RECO
   edm::Handle<reco::PhotonPi0DiscriminatorAssociationMap>  map;
@@ -510,10 +511,10 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   // now have collections
   pho_p4->Clear();
   pho_calopos->Clear();
-  pho_conv_vtx->Clear();
-  pho_conv_pair_momentum->Clear();
-  pho_conv_refitted_momentum->Clear();
-  pho_conv_vertexcorrected_p4->Clear();
+  //pho_conv_vtx->Clear();
+  //pho_conv_pair_momentum->Clear();
+  //pho_conv_refitted_momentum->Clear();
+  //pho_conv_vertexcorrected_p4->Clear();
   pho_pfiso_mycharged01->clear();
   pho_pfiso_mycharged02->clear();
   pho_pfiso_mycharged03->clear();
@@ -541,10 +542,10 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     new ((*pho_p4)[pho_n]) TLorentzVector();
     new ((*pho_calopos)[pho_n]) TVector3();
-    new ((*pho_conv_vtx)[pho_n]) TVector3();
-    new ((*pho_conv_pair_momentum)[pho_n]) TVector3();
-    new ((*pho_conv_refitted_momentum)[pho_n]) TVector3();
-    new ((*pho_conv_vertexcorrected_p4)[pho_n]) TLorentzVector();
+    //new ((*pho_conv_vtx)[pho_n]) TVector3();
+    //new ((*pho_conv_pair_momentum)[pho_n]) TVector3();
+    //new ((*pho_conv_refitted_momentum)[pho_n]) TVector3();
+    //new ((*pho_conv_vertexcorrected_p4)[pho_n]) TLorentzVector();
 
     if(debug_level>9)
       std::cout << "GlobePhotons: -21 "<< std::endl;
@@ -568,41 +569,41 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     pho_scind[pho_n] = -1;
 
-    //PF info
-    pho_isPFPhoton[pho_n] = 0;
-    pho_isPFElectron[pho_n] = 0;
-    //Find PFPhoton
-    unsigned int iphot=9999;
-    for(unsigned int i=0; i<pfCollection->size(); ++i ) {
-      if ((*pfCollection)[i].particleId()==reco::PFCandidate::gamma){
-        if ((*pfCollection)[i].mva_nothing_gamma()>0){
-          if( (*pfCollection)[i].superClusterRef()==localPho->superCluster())  iphot = i;
-        }
-      }
-    }
-    if (iphot!=9999) pho_isPFPhoton[pho_n] = 1;
-    //Find PFElectron
-    bool foundEgSC = false;
-    unsigned int iel = 9999;
-    reco::GsfElectronCollection::const_iterator elIterSl;
-    for (reco::GsfElectronCollection::const_iterator elIter = hElectrons->begin(); elIter != hElectrons->end(); ++elIter){
-       if (localPho->superCluster()==elIter->superCluster()) {
-         elIterSl = elIter;
-         foundEgSC = true;
-       }
-       if (foundEgSC){
-         int iid = 0;
-         //double MVACut_ = -0.1; //42X
-         double MVACut_ = -1.; //44X
-         for(unsigned int i=0; i<pfCollection->size(); ++i ) {
-           if ((*pfCollection)[i].particleId()==reco::PFCandidate::e && (*pfCollection)[i].gsfTrackRef().isNull()==false && (*pfCollection)[i].mva_e_pi()>MVACut_ && (*pfCollection)[i].gsfTrackRef()==elIterSl->gsfTrack()){
-             iel = i;
-             iid++;
-           }
-         }
-       }
-    }
-    if (iel!=9999) pho_isPFElectron[pho_n]=1;
+    ////PF info
+    //pho_isPFPhoton[pho_n] = 0;
+    //pho_isPFElectron[pho_n] = 0;
+    ////Find PFPhoton
+    //unsigned int iphot=9999;
+    //for(unsigned int i=0; i<pfCollection->size(); ++i ) {
+    //  if ((*pfCollection)[i].particleId()==reco::PFCandidate::gamma){
+    //    if ((*pfCollection)[i].mva_nothing_gamma()>0){
+    //      if( (*pfCollection)[i].superClusterRef()==localPho->superCluster())  iphot = i;
+    //    }
+    //  }
+    //}
+    //if (iphot!=9999) pho_isPFPhoton[pho_n] = 1;
+    ////Find PFElectron
+    //bool foundEgSC = false;
+    //unsigned int iel = 9999;
+    //reco::GsfElectronCollection::const_iterator elIterSl;
+    //for (reco::GsfElectronCollection::const_iterator elIter = hElectrons->begin(); elIter != hElectrons->end(); ++elIter){
+    //   if (localPho->superCluster()==elIter->superCluster()) {
+    //     elIterSl = elIter;
+    //     foundEgSC = true;
+    //   }
+    //   if (foundEgSC){
+    //     int iid = 0;
+    //     //double MVACut_ = -0.1; //42X
+    //     double MVACut_ = -1.; //44X
+    //     for(unsigned int i=0; i<pfCollection->size(); ++i ) {
+    //       if ((*pfCollection)[i].particleId()==reco::PFCandidate::e && (*pfCollection)[i].gsfTrackRef().isNull()==false && (*pfCollection)[i].mva_e_pi()>MVACut_ && (*pfCollection)[i].gsfTrackRef()==elIterSl->gsfTrack()){
+    //         iel = i;
+    //         iid++;
+    //       }
+    //     }
+    //   }
+    //}
+    //if (iel!=9999) pho_isPFElectron[pho_n]=1;
 
     // PHOTON ID
     //for (unsigned int iv=0; iv<hVertex->size(); iv++) {
@@ -981,54 +982,6 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_lambdaratio_global[pho_n]  = lambdaMinus_glo/lambdaPlus_glo;
     pho_lambdadivcov_global[pho_n] = lambdaMinus_glo/cov[0];
 
-    // Added by Aris - Begin
-
-    if (!doFastSim) {
-      int R_nphot = 0;
-      float nn = -1.;
-      pho_pi0disc[pho_n] = nn;
-      if (localPho->isEB()) {
-	iEvent.getByLabel("piZeroDiscriminators","PhotonPi0DiscriminatorAssociationMap",  map);
-	for( reco::PhotonCollection::const_iterator  R_phot_iter = R_photons.begin(); R_phot_iter != R_photons.end(); R_phot_iter++) { 
-	  mapIter = map->find(edm::Ref<reco::PhotonCollection>(R_PhotonHandle,R_nphot));
-	  if(mapIter!=map->end()) {
-	    nn = mapIter->val;
-	  }
-	  if(localPho->p4() == R_phot_iter->p4()) 
-	    pho_pi0disc[pho_n] = nn;
-	  R_nphot++;              
-	}
-      }
-    }
-    
-    if (!doAodSim) {
-      int iTrk=0;
-      bool ConvMatch = false;
-      for( std::vector<reco::TransientTrack>::iterator  iTk =  t_outInTrk.begin(); iTk !=  t_outInTrk.end(); iTk++) {
-        edm::Ref<reco::TrackCollection> trackRef(outInTrkHandle, iTrk );    
-        iTrk++;
-	
-        const reco::CaloClusterPtr  aClus = (*outInTrkSCAssocHandle)[trackRef];
-	
-	float conv_SC_et = aClus->energy()/cosh(aClus->eta());
-	float conv_SC_eta = aClus->eta(); float conv_SC_phi = aClus->phi(); 
-	
-	if(localPho->superCluster()->position() == aClus->position()) {
-	  ConvMatch = true;	      
-	  if (debug_level > 9) {
-	    std::cout <<  " ---> ConversionTrackPairFinder track from handle hits " 
-		      << trackRef->recHitsSize() << " inner pt  " 
-		      << sqrt(iTk->track().innerMomentum().perp2()) << "\n";  
-	    std::cout << " ---> ConversionTrackPairFinder  Out In track belonging to SC with (Et,eta,phi) (" 
-		      << conv_SC_et << "," << conv_SC_eta << "," <<  conv_SC_phi << ")\n"; 
-	  }
-	} 
-      }
-      
-      pho_IsConvOutIn[pho_n] = (int)ConvMatch; 
-    }
-    // Added by Aris - End
-
     //spike-ID
     //pho_e2overe9[pho_n] = EcalSeverityLevelAlgo::E2overE9( id, *prechits, 5.0, 0.0);
     pho_seed_severity[pho_n] = sevLevel->severityLevel(id, *prechits);
@@ -1137,106 +1090,106 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     }
 
     //other variables
-    pho_haspixseed[pho_n] = localPho->hasPixelSeed();
-    pho_hasconvtks[pho_n] = localPho->hasConversionTracks();
-    pho_nconv[pho_n] = localPho->conversions().size();
-    pho_conv_ntracks[pho_n]=0;
-    pho_conv_pairinvmass[pho_n]=-999.;
-    pho_conv_paircotthetasep[pho_n]=-999.;
-    pho_conv_eoverp[pho_n]=-999.;
-    pho_conv_zofprimvtxfromtrks[pho_n]=-999.;
-    pho_conv_distofminapproach[pho_n]=-999.;
-    pho_conv_dphitrksatvtx[pho_n]=-999.;
-    pho_conv_dphitrksatecal[pho_n]=-999.;
-    pho_conv_detatrksatecal[pho_n]=-999.;
-    pho_conv_tk1_d0[pho_n]=-999.;
-    pho_conv_tk1_pout[pho_n]=-999.;
-    pho_conv_tk1_pin[pho_n]=-999.;
-    pho_conv_validvtx[pho_n]=0;
-
-    ((TVector3 *)pho_conv_vtx->At(pho_n))->SetXYZ(-999, -999, -999);
-    ((TVector3 *)pho_conv_pair_momentum->At(pho_n))->SetXYZ(-999, -999, -999);
-    ((TVector3 *)pho_conv_refitted_momentum->At(pho_n))->SetXYZ(-999, -999, -999);
+    //pho_haspixseed[pho_n] = localPho->hasPixelSeed();
+    //pho_hasconvtks[pho_n] = localPho->hasConversionTracks();
+    //pho_nconv[pho_n] = localPho->conversions().size();
+    //pho_conv_ntracks[pho_n]=0;
+    //pho_conv_pairinvmass[pho_n]=-999.;
+    //pho_conv_paircotthetasep[pho_n]=-999.;
+    //pho_conv_eoverp[pho_n]=-999.;
+    //pho_conv_zofprimvtxfromtrks[pho_n]=-999.;
+    //pho_conv_distofminapproach[pho_n]=-999.;
+    //pho_conv_dphitrksatvtx[pho_n]=-999.;
+    //pho_conv_dphitrksatecal[pho_n]=-999.;
+    //pho_conv_detatrksatecal[pho_n]=-999.;
+    //pho_conv_tk1_d0[pho_n]=-999.;
+    //pho_conv_tk1_pout[pho_n]=-999.;
+    //pho_conv_tk1_pin[pho_n]=-999.;
+    //pho_conv_validvtx[pho_n]=0;
+    //
+    //((TVector3 *)pho_conv_vtx->At(pho_n))->SetXYZ(-999, -999, -999);
+    //((TVector3 *)pho_conv_pair_momentum->At(pho_n))->SetXYZ(-999, -999, -999);
+    //((TVector3 *)pho_conv_refitted_momentum->At(pho_n))->SetXYZ(-999, -999, -999);
 
     if (debug_level>9) std::cout << "Looking For Valid Conversion" << std::endl;
-    if (localPho->hasConversionTracks()) {
-      if (debug_level>9) std::cout << "Has Conversion Tracks" << std::endl;
-
-      //reco::ConversionRef conv(localPho->conversions(),0);
-
-      reco::ConversionRefVector conversions = localPho->conversions();
-
-      reco::ConversionRef conv = conversions[0];
-
-      if (debug_level>9) std::cout << "Checking Vertex Validity" << std::endl;
-      pho_conv_validvtx[pho_n]=conv->conversionVertex().isValid();
-
-      if (!pho_conv_validvtx[pho_n]) {
-        if (debug_level>9) std::cout << "Invalid Conversion" << std::endl;
-        ((TLorentzVector *)pho_conv_vertexcorrected_p4->At(pho_n))->SetXYZT(localPho->px(), localPho->py(), localPho->pz(), localPho->energy());
-        pho_n++;
-        continue;
-      }
-      
-      if (debug_level>9) std::cout << "Starting Conversion Loop" << std::endl;
-
-      for (unsigned int i=0; i<conversions.size(); i++) {
-	
-        //	reco::ConversionRef 
-        conv=conversions[i];
-
-        reco::Vertex vtx=conv->conversionVertex();
-
-        ((TVector3 *)pho_conv_vtx->At(pho_n))->SetXYZ(vtx.x(), vtx.y(), vtx.z());
-        ((TVector3 *)pho_conv_pair_momentum->At(pho_n))->SetXYZ(conv->pairMomentum().x(), conv->pairMomentum().y(), conv->pairMomentum().z());
-        ((TVector3 *)pho_conv_refitted_momentum->At(pho_n))->SetXYZ(conv->refittedPairMomentum().x(), conv->refittedPairMomentum().y(), conv->refittedPairMomentum().z());
-        
-        pho_conv_chi2[pho_n]=vtx.chi2();
-        pho_conv_chi2_probability[pho_n]=ChiSquaredProbability(vtx.chi2(), vtx.ndof());
-        pho_conv_ntracks[pho_n]=conv->nTracks();
-        pho_conv_MVALikelihood[pho_n]=conv->MVAout();
-
-        if(pho_conv_ntracks[pho_n]) {
-	  const std::vector<edm::RefToBase<reco::Track> > tracks = conv->tracks();
-	  for (unsigned int i=0; i<tracks.size(); i++) {
-            if(i==0) {
-              pho_conv_tk1_dz[pho_n]=tracks[i]->dz();
-              pho_conv_tk1_dzerr[pho_n]=tracks[i]->dzError();
-              pho_conv_ch1ch2[pho_n]=tracks[i]->charge();
-            } else if(i==1) {
-              pho_conv_tk2_dz[pho_n]=tracks[i]->dz();
-              pho_conv_tk2_dzerr[pho_n]=tracks[i]->dzError();
-              pho_conv_ch1ch2[pho_n]*=tracks[i]->charge();
-            }
-          }
-        }
-      }
-
-      pho_conv_pairinvmass[pho_n]=conv->pairInvariantMass();
-      pho_conv_paircotthetasep[pho_n]=conv->pairCotThetaSeparation();
-      pho_conv_eoverp[pho_n]=conv->EoverPrefittedTracks();
-      pho_conv_zofprimvtxfromtrks[pho_n]=conv->zOfPrimaryVertexFromTracks();
-      pho_conv_distofminapproach[pho_n]=conv->distOfMinimumApproach();
-      pho_conv_dphitrksatvtx[pho_n]=conv->dPhiTracksAtVtx();
-      pho_conv_dphitrksatecal[pho_n]=conv->dPhiTracksAtEcal();
-      pho_conv_detatrksatecal[pho_n]=conv->dEtaTracksAtEcal();
-
-      if(conv->tracks().size() > 0) {
-        pho_conv_tk1_d0[pho_n]=conv->tracksSigned_d0()[0];
-        pho_conv_tk1_pout[pho_n]=sqrt(conv->tracksPout()[0].Mag2());
-        pho_conv_tk1_pin[pho_n]=sqrt(conv->tracksPin()[0].Mag2());
-      }
-
-      if(conv->tracks().size() > 1) {
-        pho_conv_tk2_d0[pho_n]=conv->tracksSigned_d0()[1];
-        pho_conv_tk2_pout[pho_n]=sqrt(conv->tracksPout()[1].Mag2());
-        pho_conv_tk2_pin[pho_n]=sqrt(conv->tracksPin()[1].Mag2());
-      }
-
-      reco::Photon temp = *localPho;
-      temp.setVertex(math::XYZPoint(0.0, 0.0, pho_conv_zofprimvtxfromtrks[pho_n]));
-      ((TLorentzVector *)pho_conv_vertexcorrected_p4->At(pho_n))->SetXYZT(temp.px(), temp.py(), temp.pz(), temp.energy());
-    }
+//    if (localPho->hasConversionTracks()) {
+//      if (debug_level>9) std::cout << "Has Conversion Tracks" << std::endl;
+//
+//      //reco::ConversionRef conv(localPho->conversions(),0);
+//      
+//      reco::ConversionRefVector conversions = localPho->conversions();
+//
+//      reco::ConversionRef conv = conversions[0];
+//
+//      if (debug_level>9) std::cout << "Checking Vertex Validity" << std::endl;
+//      pho_conv_validvtx[pho_n]=conv->conversionVertex().isValid();
+//
+//      if (!pho_conv_validvtx[pho_n]) {
+//        if (debug_level>9) std::cout << "Invalid Conversion" << std::endl;
+//        ((TLorentzVector *)pho_conv_vertexcorrected_p4->At(pho_n))->SetXYZT(localPho->px(), localPho->py(), localPho->pz(), localPho->energy());
+//        pho_n++;
+//        continue;
+//      }
+//      
+//      if (debug_level>9) std::cout << "Starting Conversion Loop" << std::endl;
+//
+//      for (unsigned int i=0; i<conversions.size(); i++) {
+//	
+//        //	reco::ConversionRef 
+//        conv=conversions[i];
+//
+//        reco::Vertex vtx=conv->conversionVertex();
+//
+//        ((TVector3 *)pho_conv_vtx->At(pho_n))->SetXYZ(vtx.x(), vtx.y(), vtx.z());
+//        ((TVector3 *)pho_conv_pair_momentum->At(pho_n))->SetXYZ(conv->pairMomentum().x(), conv->pairMomentum().y(), conv->pairMomentum().z());
+//        ((TVector3 *)pho_conv_refitted_momentum->At(pho_n))->SetXYZ(conv->refittedPairMomentum().x(), conv->refittedPairMomentum().y(), conv->refittedPairMomentum().z());
+//        
+//        pho_conv_chi2[pho_n]=vtx.chi2();
+//        pho_conv_chi2_probability[pho_n]=ChiSquaredProbability(vtx.chi2(), vtx.ndof());
+//        pho_conv_ntracks[pho_n]=conv->nTracks();
+//        pho_conv_MVALikelihood[pho_n]=conv->MVAout();
+//
+//        if(pho_conv_ntracks[pho_n]) {
+//	  const std::vector<edm::RefToBase<reco::Track> > tracks = conv->tracks();
+//	  for (unsigned int i=0; i<tracks.size(); i++) {
+//            if(i==0) {
+//              pho_conv_tk1_dz[pho_n]=tracks[i]->dz();
+//              pho_conv_tk1_dzerr[pho_n]=tracks[i]->dzError();
+//              pho_conv_ch1ch2[pho_n]=tracks[i]->charge();
+//            } else if(i==1) {
+//              pho_conv_tk2_dz[pho_n]=tracks[i]->dz();
+//              pho_conv_tk2_dzerr[pho_n]=tracks[i]->dzError();
+//              pho_conv_ch1ch2[pho_n]*=tracks[i]->charge();
+//            }
+//          }
+//        }
+//      }
+//
+//      pho_conv_pairinvmass[pho_n]=conv->pairInvariantMass();
+//      pho_conv_paircotthetasep[pho_n]=conv->pairCotThetaSeparation();
+//      pho_conv_eoverp[pho_n]=conv->EoverPrefittedTracks();
+//      pho_conv_zofprimvtxfromtrks[pho_n]=conv->zOfPrimaryVertexFromTracks();
+//      pho_conv_distofminapproach[pho_n]=conv->distOfMinimumApproach();
+//      pho_conv_dphitrksatvtx[pho_n]=conv->dPhiTracksAtVtx();
+//      pho_conv_dphitrksatecal[pho_n]=conv->dPhiTracksAtEcal();
+//      pho_conv_detatrksatecal[pho_n]=conv->dEtaTracksAtEcal();
+//
+//      if(conv->tracks().size() > 0) {
+//        pho_conv_tk1_d0[pho_n]=conv->tracksSigned_d0()[0];
+//        pho_conv_tk1_pout[pho_n]=sqrt(conv->tracksPout()[0].Mag2());
+//        pho_conv_tk1_pin[pho_n]=sqrt(conv->tracksPin()[0].Mag2());
+//      }
+//
+//      if(conv->tracks().size() > 1) {
+//        pho_conv_tk2_d0[pho_n]=conv->tracksSigned_d0()[1];
+//        pho_conv_tk2_pout[pho_n]=sqrt(conv->tracksPout()[1].Mag2());
+//        pho_conv_tk2_pin[pho_n]=sqrt(conv->tracksPin()[1].Mag2());
+//      }
+//
+//      reco::Photon temp = *localPho;
+//      temp.setVertex(math::XYZPoint(0.0, 0.0, pho_conv_zofprimvtxfromtrks[pho_n]));
+//      ((TLorentzVector *)pho_conv_vertexcorrected_p4->At(pho_n))->SetXYZT(temp.px(), temp.py(), temp.pz(), temp.energy());
+//    }
 
     pho_n++;
   }
@@ -1246,5 +1199,5 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   delete topology_p;
 
-  return true;
+  //return true;
 }

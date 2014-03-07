@@ -31,7 +31,7 @@
 <use name="root"/>
 <use name="boost"/>
 <use   name="rootrflx"/>
-#<flags CXXFLAGS="-O0 -g3 -fno-inline"></flags>
+<flags CXXFLAGS="-O0 -g3 -fno-inline"></flags>
 <export>
 <lib name = "1"/>
 </export>

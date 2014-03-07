@@ -1,8 +1,7 @@
 #ifndef GLOBEPHOTONS_H
 #define GLOBEPHOTONS_H
 
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/EventSetup.h"
+#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeBase.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/Limits.h"
@@ -31,8 +30,6 @@
 #include "TrackingTools/TransientTrack/plugins/TransientTrackBuilderESProducer.h"
 #include "RecoEgamma/EgammaTools/interface/EGEnergyCorrector.h"
 
-//#include "RecoEgamma/EgammaTools/interface/ggPFPhotons.h"
-
 #include "TTree.h"
 #include "TClonesArray.h"
 #include "TLorentzVector.h"
@@ -41,15 +38,15 @@ typedef math::XYZTLorentzVector LorentzVector;
 
 class GlobeAnalyzer;
 
-class GlobePhotons {
+class GlobePhotons : public GlobeBase {
  public:
 
-  GlobePhotons(const edm::ParameterSet&, const char* n = "unused");
+  GlobePhotons(const edm::ParameterSet&, std::string n = "unused");
   ~GlobePhotons();
 
   void checkSetup(const edm::EventSetup&);
   void defineBranch(GlobeAnalyzer* ana);
-  bool analyze(const edm::Event&, const edm::EventSetup&);
+  void analyze(const edm::Event&, const edm::EventSetup&);
 
   int PhotonID(reco::PhotonRef, int, reco::VertexRef, bool, int a = -1);
 
@@ -62,11 +59,6 @@ class GlobePhotons {
   int photonCutLevel4(float, float, float, float, float, float, float, float);
 
   void setPhotonIDThresholds(const edm::ParameterSet&);
-
-  //std::vector<float> pfTkIsoWithVertex(reco::PhotonRef, const reco::PFCandidateCollection*, float, float, std::vector<reco::PFCandidate::ParticleType>); 
-  //float pfEcalIso(reco::PhotonRef, const reco::PFCandidateCollection*, float, float, float, float, float, float, std::vector<reco::PFCandidate::ParticleType>);
-  //float pfHcalIso(reco::PhotonRef, const reco::PFCandidateCollection*, float, float, std::vector<reco::PFCandidate::ParticleType>);
-  //bool sameParticle(const reco::PFCandidate&, const reco::PFCandidate&) const;  
 
   std::map<DetId, EcalRecHit> rechits_map_;
 
@@ -213,49 +205,12 @@ class GlobePhotons {
   Float_t pho_pfiso_myphoton05[MAX_PHOTONS]; 
   Float_t pho_pfiso_myphoton06[MAX_PHOTONS]; 
 
-  /*
-  Float_t pho_pfiso_egphoton01[MAX_PHOTONS]; 
-  Float_t pho_pfiso_egphoton02[MAX_PHOTONS]; 
-  Float_t pho_pfiso_egphoton03[MAX_PHOTONS];  
-  Float_t pho_pfiso_egphoton04[MAX_PHOTONS];
-  Float_t pho_pfiso_egphoton05[MAX_PHOTONS]; 
-  Float_t pho_pfiso_egphoton06[MAX_PHOTONS]; 
-
-  Float_t pho_pfiso_barephoton01[MAX_PHOTONS]; 
-  Float_t pho_pfiso_barephoton02[MAX_PHOTONS]; 
-  Float_t pho_pfiso_barephoton03[MAX_PHOTONS];  
-  Float_t pho_pfiso_barephoton04[MAX_PHOTONS];
-  Float_t pho_pfiso_barephoton05[MAX_PHOTONS]; 
-  Float_t pho_pfiso_barephoton06[MAX_PHOTONS]; 
-  */
   std::vector<std::vector<float> >* pho_pfiso_mycharged01;
   std::vector<std::vector<float> >* pho_pfiso_mycharged02;
   std::vector<std::vector<float> >* pho_pfiso_mycharged03;
   std::vector<std::vector<float> >* pho_pfiso_mycharged04;
   std::vector<std::vector<float> >* pho_pfiso_mycharged05;
   std::vector<std::vector<float> >* pho_pfiso_mycharged06;
-
-  /*
-  std::vector<std::vector<float> >* pho_pfiso_egcharged01;
-  std::vector<std::vector<float> >* pho_pfiso_egcharged02;
-  std::vector<std::vector<float> >* pho_pfiso_egcharged03;
-  std::vector<std::vector<float> >* pho_pfiso_egcharged04;
-  std::vector<std::vector<float> >* pho_pfiso_egcharged05;
-  std::vector<std::vector<float> >* pho_pfiso_egcharged06;
-
-  std::vector<std::vector<float> >* pho_pfiso_barecharged01;
-  std::vector<std::vector<float> >* pho_pfiso_barecharged02;
-  std::vector<std::vector<float> >* pho_pfiso_barecharged03;
-  std::vector<std::vector<float> >* pho_pfiso_barecharged04;
-  std::vector<std::vector<float> >* pho_pfiso_barecharged05;
-  std::vector<std::vector<float> >* pho_pfiso_barecharged06;
-  */
-  //Float_t pho_pfiso_neutral03[MAX_PHOTONS];
-  //Float_t pho_pfiso_charged03[MAX_PHOTONS];
-  //Float_t pho_pfiso_photon03[MAX_PHOTONS];  
-  //Float_t pho_pfiso_neutral04[MAX_PHOTONS];
-  //Float_t pho_pfiso_charged04[MAX_PHOTONS];
-  //Float_t pho_pfiso_photon04[MAX_PHOTONS];  
 
   Float_t pho_ecalsumetconedr04[MAX_PHOTONS];
   Float_t pho_hcalsumetconedr04[MAX_PHOTONS];
@@ -381,29 +336,10 @@ class GlobePhotons {
   edm::ESHandle<CaloGeometry> theCaloGeom_;
 
   const HBHERecHitCollection* hithbhe_;
-// Correction Schemes
+  // Correction Schemes
   EcalClusterFunctionBaseClass *fEtaCorr;
   EcalClusterFunctionBaseClass *CrackCorr;
   EcalClusterFunctionBaseClass *LocalCorr;
-
-  /*
-  // PhotonID thresholds
-  std::vector<double> cutsubleadisosumoet6c[12];
-  std::vector<double> cutsubleadisosumoetbad6c[12];
-  std::vector<double> cutsubleadtrkisooetom6c[12];
-  std::vector<double> cutsubleadsieie6c[12];
-  std::vector<double> cutsubleadhovere6c[12];
-  std::vector<double> cutsubleadr96c[12];
-  std::vector<double> cutsublead_drtotk6c[12];
-  
-  std::vector<double> cutsubleadisosumoet[12];
-  std::vector<double> cutsubleadisosumoetbad[12];
-  std::vector<double> cutsubleadtrkisooetom[12];
-  std::vector<double> cutsubleadsieie[12];
-  std::vector<double> cutsubleadhovere[12];
-  std::vector<double> cutsubleadr9[12];
-  std::vector<double> cutsublead_drtotk[12];
-  */
 
   CaloGeometry geometry;
   const EcalSeverityLevelAlgo* sevLevel; 

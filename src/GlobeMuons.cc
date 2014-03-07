@@ -22,7 +22,7 @@ GlobeMuons::GlobeMuons(const edm::ParameterSet& iConfig, const char* n): nome(n)
   theAssociator = new TrackDetectorAssociator;
   theAssociator->useDefaultPropagator();
   
-  rhoColl = iConfig.getParameter<edm::InputTag>("RhoCollectionForMuons");
+  rhoColl = iConfig.getParameter<edm::InputTag>("rhoCollection_algo1");//RhoCollectionForMuons");
 
   // get cut thresholds
   gCUT = new GlobeCuts(iConfig);

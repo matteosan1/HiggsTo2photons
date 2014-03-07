@@ -1027,17 +1027,17 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     /* NEW variables */
     
-    if (!egsf.pflowSuperCluster().isNull()) {
-      el_nbrempf[el_n] = egsf.pflowSuperCluster()->clustersSize();
-      el_eseedpf[el_n] = egsf.pflowSuperCluster()->seed()->energy();
-      el_epf[el_n] = egsf.pflowSuperCluster()->energy();
-      el_psenergypf[el_n] = egsf.pflowSuperCluster()->preshowerEnergy();
-    } else {
-      el_nbrempf[el_n] = -1;
-      el_eseedpf[el_n] = -1;
-      el_epf[el_n] = -1;
-      el_psenergypf[el_n] = -1;
-    }
+    //if (!egsf.pflowSuperCluster().isNull()) {
+    //  el_nbrempf[el_n] = egsf.pflowSuperCluster()->clustersSize();
+    //  el_eseedpf[el_n] = egsf.pflowSuperCluster()->seed()->energy();
+    // el_epf[el_n] = egsf.pflowSuperCluster()->energy();
+    // el_psenergypf[el_n] = egsf.pflowSuperCluster()->preshowerEnergy();
+    //} else {
+    el_nbrempf[el_n] = -1;
+    el_eseedpf[el_n] = -1;
+    el_epf[el_n] = -1;
+    el_psenergypf[el_n] = -1;
+      //}
     
     el_passcutpresel[el_n] = (Int_t)egsf.passingCutBasedPreselection();
     el_passmvapresel[el_n] = (Int_t)egsf.passingMvaPreselection();
@@ -1062,9 +1062,10 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     el_ecaldrv[el_n] = egsf.ecalDrivenSeed();
     el_tkdrv[el_n] = egsf.trackerDrivenSeed();
     
-    el_pfiso_charged[el_n] = egsf.pfIsolationVariables().chargedHadronIso;//(*(electronIsoVals[0].product()))[myElectronRef]; //
-    el_pfiso_photon[el_n]  = egsf.pfIsolationVariables().photonIso	 ;//(*(electronIsoVals[1].product()))[myElectronRef]; //
-    el_pfiso_neutral[el_n] = egsf.pfIsolationVariables().neutralHadronIso;//(*(electronIsoVals[2].product()))[myElectronRef]; //
+    // FIXME
+    el_pfiso_charged[el_n] = 0;//egsf.pfIsolationVariables().chargedHadronIso;//(*(electronIsoVals[0].product()))[myElectronRef]; //
+    el_pfiso_photon[el_n]  = 0;//egsf.pfIsolationVariables().photonIso	 ;//(*(electronIsoVals[1].product()))[myElectronRef]; //
+    el_pfiso_neutral[el_n] = 0;//egsf.pfIsolationVariables().neutralHadronIso;//(*(electronIsoVals[2].product()))[myElectronRef]; //
 
     el_tkiso04[el_n]   = egsf.dr04TkSumPt();
     el_ecaliso04[el_n] = egsf.dr04EcalRecHitSumEt();
