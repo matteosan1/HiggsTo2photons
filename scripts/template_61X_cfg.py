@@ -563,8 +563,8 @@ if (flagMC is 'ON' and flagFastSim is 'ON'):
   process.h2ganalyzer.doGenVertices = False
 elif ((flagMC is 'ON' and flagFastSim is 'OFF') or flagPG is 'ON'):
   process.h2ganalyzer.doGenJet_algo1 = True
-  process.h2ganalyzer.doGenJet_algo2 = True
-  process.h2ganalyzer.doGenJet_algo3 = True
+  #process.h2ganalyzer.doGenJet_algo2 = True
+  #process.h2ganalyzer.doGenJet_algo3 = True
   process.h2ganalyzer.doGenParticles = True
   process.h2ganalyzer.doGenMet = True
   process.h2ganalyzer.doGenVertices = True

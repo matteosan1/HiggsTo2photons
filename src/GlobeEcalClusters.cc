@@ -173,7 +173,7 @@ void GlobeEcalClusters::analyzeSuperClusters(edm::Handle<reco::SuperClusterColle
     
     if(sc_n >= MAX_SUPERCLUSTERS) {
       std::cout << "GlobeEcalCluster: WARNING too many superclusters. " << MAX_SUPERCLUSTERS << " allowed." << std::endl;
-      break;
+      return;
     }
     
     reco::SuperClusterRef sc(scH, i);
@@ -238,7 +238,7 @@ void GlobeEcalClusters::analyzeSuperClusters(edm::Handle<reco::SuperClusterColle
             MAX_SUPERCLUSTER_BASICCLUSTERS << " allowed). Event has " << sc->clustersSize() << std::endl;
           break;
         } 
-        
+	
         for(unsigned int j=0; j<bcH->size(); ++j) {
           reco::BasicClusterRef basic(bcH, j);
           if (&(**itClus) == &(*basic)) {

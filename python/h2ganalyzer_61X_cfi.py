@@ -305,8 +305,8 @@ h2ganalyzer = cms.EDAnalyzer(
     doGenVertices = cms.bool(True),
     
     doGenJet_algo1 = cms.bool(True),
-    doGenJet_algo2 = cms.bool(True),
-    doGenJet_algo3 = cms.bool(True),
+    doGenJet_algo2 = cms.bool(False),
+    doGenJet_algo3 = cms.bool(False),
 
     doGenMet = cms.bool(True),
     
