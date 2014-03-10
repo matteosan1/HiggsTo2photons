@@ -1,7 +1,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeLeptons.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
-
 GlobeLeptons::GlobeLeptons() {
   leptons_cut_eta_rec=15.;
   leptons_cut_et_rec=0.;

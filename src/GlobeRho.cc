@@ -19,9 +19,11 @@ void GlobeRho::defineBranch(GlobeAnalyzer* ana) {
 
 bool GlobeRho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   
+  rho = 0;
   edm::Handle<double> rhoHandle;
   iEvent.getByLabel(rhoCollection, rhoHandle);
-  rho = *(rhoHandle.product());
+  if (!rhoHandle.failedToGet())
+    rho = *(rhoHandle.product());
  
   return true;
 }

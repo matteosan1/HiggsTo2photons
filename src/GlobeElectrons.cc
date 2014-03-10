@@ -1,7 +1,7 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeElectrons.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/Tools.h"
-
+#include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
@@ -41,11 +41,14 @@
 #include <iostream>
 
 
-GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig, const char* n): nome(n) {
+GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig) {
   
-  char a[100];
-  sprintf(a, "ElectronColl_%s", nome);
-  electronColl = iConfig.getParameter<edm::InputTag>(a);
+  type_ = iConfig.getParameter<std::string>("type");
+  prefix_ = iConfig.getParameter<std::string>("prefix");
+  if (prefix_ != "")
+    prefix_ = "_"+prefix_;
+
+  electronColl = iConfig.getParameter<edm::InputTag>("ElectronColl");
   debug_level = iConfig.getParameter<int>("Debug_Level");
   doAodSim = iConfig.getParameter<bool>("doAodSim");
 
@@ -55,7 +58,6 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig, const char* n):
   trackColl = iConfig.getParameter<edm::InputTag>("TrackColl");
   trackColl2 = iConfig.getParameter<edm::InputTag>("TrackColl3");
   vertexColl = iConfig.getParameter<edm::InputTag>("VertexColl_std");
-  //pfColl = iConfig.getParameter<edm::InputTag>("PFCandidateColl");
   rhoCollection = iConfig.getParameter<edm::InputTag>("rhoCollection_algo1");
 
   hybridSuperClusterColl = iConfig.getParameter<edm::InputTag>("HybridSuperClusterColl");
@@ -67,36 +69,37 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig, const char* n):
 
   eIDLabels = iConfig.getParameter<std::vector<edm::InputTag> >("eIDLabels");
 
-  //eleRegressionFilename = iConfig.getParameter<std::string> ("eleRegressionFileName");  
-  //eleRegressionType     = iConfig.getParameter<int> ("eleRegressionType");  
+  eleRegressionFilename = iConfig.getParameter<std::string> ("eleRegressionFileName");  
+  eleRegressionType     = iConfig.getParameter<int> ("eleRegressionType");  
 
-  //eleRegression = new ElectronEnergyRegressionEvaluate();
-  //char filename[500];
-  //char* descr = getenv("CMSSW_BASE");
-  //const char* version[] = {"V1", "V2"};
-  //sprintf(filename, "%s/src/EGamma/EGammaAnalysisTools/data/%s_%s.root", descr, eleRegressionFilename.c_str(), version[eleRegressionType]);
-  //if (fexist(filename)) {
-  //  sprintf(filename, "http://cern.ch/sani/%s_%s.root", eleRegressionFilename.c_str(), version[eleRegressionType]);
-  //  eleRegression->initialize(filename, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
-  //} else {
-  //  eleRegression->initialize(filename, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
-  //}
+  eleRegression = new ElectronEnergyRegressionEvaluate();
+  char filename[500], filename2[500];
+  char* descr = getenv("CMSSW_BASE");
+  const char* version[] = {"V1", "V2"};
+  sprintf(filename, "%s/src/EgammaAnalysis/ElectronTools/data/%s_%s.root", descr, eleRegressionFilename.c_str(), version[eleRegressionType]);
+  sprintf(filename2, "EgammaAnalysis/ElectronTools/data/%s_%s.root", eleRegressionFilename.c_str(), version[eleRegressionType]);
+  if (fexist(filename)) {
+    sprintf(filename, "http://cern.ch/sani/%s_%s.root", eleRegressionFilename.c_str(), version[eleRegressionType]);
+    eleRegression->initialize(filename, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
+  } else {
+    eleRegression->initialize(filename2, ElectronEnergyRegressionEvaluate::ElectronEnergyRegressionType::kNoTrkVar);
+  }
 
   mvaNonTrigWeightFiles = iConfig.getParameter<std::vector<std::string> >("electronNonTrigMVAWeightFileNames");
   mvaTrigWeightFiles    = iConfig.getParameter<std::vector<std::string> >("electronTrigMVAWeightFileNames");
   
   for(unsigned int j=0; j<mvaTrigWeightFiles.size(); j++)
     myManualCatWeightsTrig.push_back(edm::FileInPath(mvaTrigWeightFiles[j]).fullPath());
-
+  
   for(unsigned int j=0; j<mvaNonTrigWeightFiles.size(); j++)
     myManualCatWeightsNonTrig.push_back(edm::FileInPath(mvaNonTrigWeightFiles[j]).fullPath());
-
+  
   myMVANonTrig = new EGammaMvaEleEstimator();
   myMVANonTrig->initialize("BDT",
            EGammaMvaEleEstimator::kNonTrig,
            true, // use manual cat
            myManualCatWeightsNonTrig);
-
+  
   myMVATrig = new EGammaMvaEleEstimator();
   myMVATrig->initialize("BDT",
            EGammaMvaEleEstimator::kTrig,
@@ -139,468 +142,431 @@ void GlobeElectrons::defineBranch(GlobeAnalyzer* ana) {
   el_bchits = new std::vector<std::vector<UInt_t> >;
 
   char a1[50], a2[50];
-  
-  sprintf(a1, "el_%s_n", nome);
-  sprintf(a2, "el_%s_n/I", nome);
+    sprintf(a1, "el%s_n", prefix_.c_str());
+  sprintf(a2, "el%s_n/I", prefix_.c_str());
   ana->Branch(a1, &el_n, a2);
   
-  sprintf(a1, "el_%s_sc", nome);
+  sprintf(a1, "el%s_sc", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_sc, 32000, 0);
   
-  sprintf(a1, "el_%s_p4", nome);
+  sprintf(a1, "el%s_p4", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_p4, 32000, 0);
 
-  sprintf(a1, "el_%s_p4_corr", nome);
+  sprintf(a1, "el%s_p4_corr", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_p4_corr, 32000, 0);
 
-  sprintf(a1, "el_%s_momvtx", nome);
+  sprintf(a1, "el%s_momvtx", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_momvtx, 32000, 0);
 
-  sprintf(a1, "el_%s_momvtxconst", nome);
+  sprintf(a1, "el%s_momvtxconst", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_momvtxconst, 32000, 0);
 
-  sprintf(a1, "el_%s_momcalo", nome);
+  sprintf(a1, "el%s_momcalo", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_momcalo, 32000, 0);
 
-  sprintf(a1, "el_%s_momout", nome);
+  sprintf(a1, "el%s_momout", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_momout, 32000, 0);
   
-  sprintf(a1, "el_%s_posvtx", nome);
+  sprintf(a1, "el%s_posvtx", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_posvtx, 32000, 0);
 
-  sprintf(a1, "el_%s_poscalo", nome);
+  sprintf(a1, "el%s_poscalo", prefix_.c_str());
   ana->Branch(a1, "TClonesArray", &el_poscalo, 32000, 0);
   
-  sprintf(a1, "el_%s_eopin", nome);
-  sprintf(a2, "el_%s_eopin[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_eopin", prefix_.c_str());
+  sprintf(a2, "el%s_eopin[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_eopin, a2);
   
-  sprintf(a1, "el_%s_eseedopout", nome);
-  sprintf(a2, "el_%s_eseedopout[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_eseedopout", prefix_.c_str());
+  sprintf(a2, "el%s_eseedopout[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_eseedopout, a2);
   
-  sprintf(a1, "el_%s_pout", nome);
-  sprintf(a2, "el_%s_pout[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_pout", prefix_.c_str());
+  sprintf(a2, "el%s_pout[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_pout, a2);
   
-  sprintf(a1, "el_%s_pin", nome);
-  sprintf(a2, "el_%s_pin[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_pin", prefix_.c_str());
+  sprintf(a2, "el%s_pin[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_pin, a2);
   
-  sprintf(a1, "el_%s_e1x5", nome);
-  sprintf(a2, "el_%s_e1x5[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_e1x5", prefix_.c_str());
+  sprintf(a2, "el%s_e1x5[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_e1x5, a2);
   
-  sprintf(a1, "el_%s_e5x5", nome);
-  sprintf(a2, "el_%s_e5x5[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_e5x5", prefix_.c_str());
+  sprintf(a2, "el%s_e5x5[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_e5x5, a2);
 
-  sprintf(a1, "el_%s_e2x5", nome);
-  sprintf(a2, "el_%s_e2x5[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_e2x5", prefix_.c_str());
+  sprintf(a2, "el%s_e2x5[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_e2x5, a2);
  
-  sprintf(a1, "el_%s_sipip", nome);
-  sprintf(a2, "el_%s_sipip[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_sipip", prefix_.c_str());
+  sprintf(a2, "el%s_sipip[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_sipip, a2);
   
-  sprintf(a1, "el_%s_sieie", nome);
-  sprintf(a2, "el_%s_sieie[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_sieie", prefix_.c_str());
+  sprintf(a2, "el%s_sieie[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_sieie, a2);
 
-  sprintf(a1, "el_%s_sieiesc", nome);
-  sprintf(a2, "el_%s_sieiesc[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_sieiesc", prefix_.c_str());
+  sprintf(a2, "el%s_sieiesc[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_sieiesc, a2);
 
-  sprintf(a1, "el_%s_eseffsixix", nome);
-  sprintf(a2, "el_%s_eseffsixix[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_eseffsixix", prefix_.c_str());
+  sprintf(a2, "el%s_eseffsixix[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_eseffsixix, a2);
 
-  sprintf(a1, "el_%s_eseffsiyiy", nome);
-  sprintf(a2, "el_%s_eseffsiyiy[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_eseffsiyiy", prefix_.c_str());
+  sprintf(a2, "el%s_eseffsiyiy[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_eseffsiyiy, a2);
 
-  sprintf(a1, "el_%s_eseedopin", nome);
-  sprintf(a2, "el_%s_eseedopin[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_eseedopin", prefix_.c_str());
+  sprintf(a2, "el%s_eseedopin[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_eseedopin, a2);
   
-  sprintf(a1, "el_%s_fbrem", nome);
-  sprintf(a2, "el_%s_fbrem[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_fbrem", prefix_.c_str());
+  sprintf(a2, "el%s_fbrem[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_fbrem, a2);
 
-  sprintf(a1, "el_%s_nbrem", nome);
-  sprintf(a2, "el_%s_nbrem[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_nbrem", prefix_.c_str());
+  sprintf(a2, "el%s_nbrem[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_nbrem, a2);
 
-  sprintf(a1, "el_%s_hoe", nome);
-  sprintf(a2, "el_%s_hoe[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hoe", prefix_.c_str());
+  sprintf(a2, "el%s_hoe[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hoe, a2);
 
-  sprintf(a1, "el_%s_hoed1", nome);
-  sprintf(a2, "el_%s_hoed1[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hoed1", prefix_.c_str());
+  sprintf(a2, "el%s_hoed1[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hoed1, a2);
 
-  sprintf(a1, "el_%s_hoed2", nome);
-  sprintf(a2, "el_%s_hoed2[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hoed2", prefix_.c_str());
+  sprintf(a2, "el%s_hoed2[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hoed2, a2);
 
-  sprintf(a1, "el_%s_hoebc", nome);
-  sprintf(a2, "el_%s_hoebc[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hoebc", prefix_.c_str());
+  sprintf(a2, "el%s_hoebc[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hoebc, a2);
 
-  sprintf(a1, "el_%s_hoebcd1", nome);
-  sprintf(a2, "el_%s_hoebcd1[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hoebcd1", prefix_.c_str());
+  sprintf(a2, "el%s_hoebcd1[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hoebcd1, a2);
 
-  sprintf(a1, "el_%s_hoebcd2", nome);
-  sprintf(a2, "el_%s_hoebcd2[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hoebcd2", prefix_.c_str());
+  sprintf(a2, "el%s_hoebcd2[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hoebcd2, a2);
   
-  sprintf(a1, "el_%s_detain", nome);
-  sprintf(a2, "el_%s_detain[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_detain", prefix_.c_str());
+  sprintf(a2, "el%s_detain[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_detain, a2);
   
-  sprintf(a1, "el_%s_dphiin", nome);
-  sprintf(a2, "el_%s_dphiin[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_dphiin", prefix_.c_str());
+  sprintf(a2, "el%s_dphiin[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_dphiin, a2);
   
-  sprintf(a1, "el_%s_detaout", nome);
-  sprintf(a2, "el_%s_detaout[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_detaout", prefix_.c_str());
+  sprintf(a2, "el%s_detaout[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_detaout, a2);
   
-  sprintf(a1, "el_%s_dphiout", nome);
-  sprintf(a2, "el_%s_dphiout[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_dphiout", prefix_.c_str());
+  sprintf(a2, "el%s_dphiout[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_dphiout, a2);
    
-  sprintf(a1, "el_%s_class", nome);
-  sprintf(a2, "el_%s_class[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_class", prefix_.c_str());
+  sprintf(a2, "el%s_class[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_class, a2);
  
-  sprintf(a1, "el_%s_crack", nome);
-  sprintf(a2, "el_%s_crack[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_crack", prefix_.c_str());
+  sprintf(a2, "el%s_crack[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_crack, a2);
    
-  sprintf(a1, "el_%s_nambtk", nome);
-  sprintf(a2, "el_%s_nambtk[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_nambtk", prefix_.c_str());
+  sprintf(a2, "el%s_nambtk[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_nambtk, a2);
 
-  sprintf(a1, "el_%s_scind", nome);
-  sprintf(a2, "el_%s_scind[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_scind", prefix_.c_str());
+  sprintf(a2, "el%s_scind[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_scind, a2);
   
-  sprintf(a1, "el_%s_z0", nome);
-  sprintf(a2, "el_%s_z0[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_z0", prefix_.c_str());
+  sprintf(a2, "el%s_z0[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_z0, a2);
   
-  sprintf(a1, "el_%s_d0", nome);
-  sprintf(a2, "el_%s_d0[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_d0", prefix_.c_str());
+  sprintf(a2, "el%s_d0[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_d0, a2);
 
-  sprintf(a1, "el_%s_chi2", nome);
-  sprintf(a2, "el_%s_chi2[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_chi2", prefix_.c_str());
+  sprintf(a2, "el%s_chi2[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_chi2, a2);
   
-  /*
-  sprintf(a1, "el_%s_mva_noiso", nome);
-  sprintf(a2, "el_%s_mva_noiso[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_mva_noiso, a2);
-
-  sprintf(a1, "el_%s_mva", nome);
-  sprintf(a2, "el_%s_mva[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_mva, a2);
-  */
-
-  sprintf(a1, "el_%s_mva_nontrig", nome);
-  sprintf(a2, "el_%s_mva_nontrig[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_mva_nontrig", prefix_.c_str());
+  sprintf(a2, "el%s_mva_nontrig[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_mva_nontrig, a2);
   
-  sprintf(a1, "el_%s_mva_trig", nome);
-  sprintf(a2, "el_%s_mva_trig[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_mva_trig", prefix_.c_str());
+  sprintf(a2, "el%s_mva_trig[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_mva_trig, a2);
   
-  sprintf(a1, "el_%s_ch_gsf", nome);
-  sprintf(a2, "el_%s_ch_gsf[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_ch_gsf", prefix_.c_str());
+  sprintf(a2, "el%s_ch_gsf[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ch_gsf, a2);
 
-  sprintf(a1, "el_%s_ch_scpix", nome);
-  sprintf(a2, "el_%s_ch_scpix[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_ch_scpix", prefix_.c_str());
+  sprintf(a2, "el%s_ch_scpix[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ch_scpix, a2);
 
-  sprintf(a1, "el_%s_charge", nome);
-  sprintf(a2, "el_%s_charge[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_charge", prefix_.c_str());
+  sprintf(a2, "el%s_charge[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_charge, a2);
   
-  sprintf(a1, "el_%s_losthits", nome);
-  sprintf(a2, "el_%s_losthits[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_losthits", prefix_.c_str());
+  sprintf(a2, "el%s_losthits[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_losthits, a2);
   
-  sprintf(a1, "el_%s_validhits", nome);
-  sprintf(a2, "el_%s_validhits[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_validhits", prefix_.c_str());
+  sprintf(a2, "el%s_validhits[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_validhits, a2);
 
-  sprintf(a1, "el_%s_hp_expin", nome);
-  sprintf(a2, "el_%s_hp_expin[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_hp_expin", prefix_.c_str());
+  sprintf(a2, "el%s_hp_expin[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hp_expin, a2);
 
-  sprintf(a1, "el_%s_hp_expout", nome);
-  sprintf(a2, "el_%s_hp_expout[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_hp_expout", prefix_.c_str());
+  sprintf(a2, "el%s_hp_expout[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hp_expout, a2);
 
-  sprintf(a1, "el_%s_catbased", nome);
+  sprintf(a1, "el%s_catbased", prefix_.c_str());
   ana->Branch(a1, "std::vector<std::vector<int> >", &el_catbased);
 
-  sprintf(a1, "el_%s_schits", nome);
+  sprintf(a1, "el%s_schits", prefix_.c_str());
   ana->Branch(a1, "std::vector<std::vector<UInt_t> >", &el_schits);
 
-  sprintf(a1, "el_%s_bchits", nome);
+  sprintf(a1, "el%s_bchits", prefix_.c_str());
   ana->Branch(a1, "std::vector<std::vector<UInt_t> >", &el_bchits);
 
-  sprintf(a1, "el_%s_tkind", nome);
-  sprintf(a2, "el_%s_tkind[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_tkind", prefix_.c_str());
+  sprintf(a2, "el%s_tkind[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_tkind, a2); 
 
-  /*
-  sprintf(a1, "el_%s_pfiso_myneutral03", nome);
-  sprintf(a2, "el_%s_pfiso_myneutral03[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_myneutral03, a2);
-
-  sprintf(a1, "el_%s_pfiso_mycharged03", nome);
-  sprintf(a2, "el_%s_pfiso_mycharged03[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_mycharged03, a2);
-  
-  sprintf(a1, "el_%s_pfiso_myphoton03", nome);
-  sprintf(a2, "el_%s_pfiso_myphoton03[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_myphoton03, a2);
-
-  sprintf(a1, "el_%s_pfiso_myneutral04", nome);
-  sprintf(a2, "el_%s_pfiso_myneutral04[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_myneutral04, a2);
-
-  sprintf(a1, "el_%s_pfiso_mycharged04", nome);
-  sprintf(a2, "el_%s_pfiso_mycharged04[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_mycharged04, a2);
-  
-  sprintf(a1, "el_%s_pfiso_myphoton04", nome);
-  sprintf(a2, "el_%s_pfiso_myphoton04[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_pfiso_myphoton04, a2);
-  */
-
-  sprintf(a1, "el_%s_pfiso_neutral", nome);
-  sprintf(a2, "el_%s_pfiso_neutral[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_pfiso_neutral", prefix_.c_str());
+  sprintf(a2, "el%s_pfiso_neutral[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_pfiso_neutral, a2);
 
-  sprintf(a1, "el_%s_pfiso_charged", nome);
-  sprintf(a2, "el_%s_pfiso_charged[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_pfiso_charged", prefix_.c_str());
+  sprintf(a2, "el%s_pfiso_charged[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_pfiso_charged, a2);
   
-  sprintf(a1, "el_%s_pfiso_photon", nome);
-  sprintf(a2, "el_%s_pfiso_photon[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_pfiso_photon", prefix_.c_str());
+  sprintf(a2, "el%s_pfiso_photon[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_pfiso_photon, a2);
 
-  sprintf(a1, "el_%s_hcaliso03", nome);
-  sprintf(a2, "el_%s_hcaliso03[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hcaliso03", prefix_.c_str());
+  sprintf(a2, "el%s_hcaliso03[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hcaliso03, a2);
 
-  sprintf(a1, "el_%s_hcalsolidiso03", nome);
-  sprintf(a2, "el_%s_hcalsolidiso03[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_hcalsolidiso03, a2);
+  //sprintf(a1, "el%s_hcalsolidiso03", prefix_.c_str());
+  //sprintf(a2, "el%s_hcalsolidiso03[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
+  //ana->Branch(a1, &el_hcalsolidiso03, a2);
 
-  sprintf(a1, "el_%s_ecaliso03", nome);
-  sprintf(a2, "el_%s_ecaliso03[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_ecaliso03", prefix_.c_str());
+  sprintf(a2, "el%s_ecaliso03[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ecaliso03, a2);
   
-  sprintf(a1, "el_%s_tkiso03", nome);
-  sprintf(a2, "el_%s_tkiso03[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_tkiso03", prefix_.c_str());
+  sprintf(a2, "el%s_tkiso03[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_tkiso03, a2);
 
-  sprintf(a1, "el_%s_hcaliso04", nome);
-  sprintf(a2, "el_%s_hcaliso04[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hcaliso04", prefix_.c_str());
+  sprintf(a2, "el%s_hcaliso04[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hcaliso04, a2);
 
-  sprintf(a1, "el_%s_hcalsolidiso04", nome);
-  sprintf(a2, "el_%s_hcalsolidiso04[el_%s_n]/F", nome, nome);
-  ana->Branch(a1, &el_hcalsolidiso04, a2);
+  //sprintf(a1, "el%s_hcalsolidiso04", prefix_.c_str());
+  //sprintf(a2, "el%s_hcalsolidiso04[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
+  //ana->Branch(a1, &el_hcalsolidiso04, a2);
 
-  sprintf(a1, "el_%s_hcalbciso03", nome);
-  sprintf(a2, "el_%s_hcalbciso03[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hcalbciso03", prefix_.c_str());
+  sprintf(a2, "el%s_hcalbciso03[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hcalbciso03, a2);
 
-  sprintf(a1, "el_%s_hcalbciso04", nome);
-  sprintf(a2, "el_%s_hcalbciso04[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_hcalbciso04", prefix_.c_str());
+  sprintf(a2, "el%s_hcalbciso04[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_hcalbciso04, a2);
 
-  sprintf(a1, "el_%s_ecaliso04", nome);
-  sprintf(a2, "el_%s_ecaliso04[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_ecaliso04", prefix_.c_str());
+  sprintf(a2, "el%s_ecaliso04[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ecaliso04, a2);
   
-  sprintf(a1, "el_%s_tkiso04", nome);
-  sprintf(a2, "el_%s_tkiso04[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_tkiso04", prefix_.c_str());
+  sprintf(a2, "el%s_tkiso04[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_tkiso04, a2);
   
-  sprintf(a1, "el_%s_tkdrv", nome);
-  sprintf(a2, "el_%s_tkdrv[el_%s_n]/O", nome, nome);
+  sprintf(a1, "el%s_tkdrv", prefix_.c_str());
+  sprintf(a2, "el%s_tkdrv[el%s_n]/O", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_tkdrv, a2);
  
-  sprintf(a1, "el_%s_ecaldrv", nome);
-  sprintf(a2, "el_%s_ecaldrv[el_%s_n]/O", nome, nome);
+  sprintf(a1, "el%s_ecaldrv", prefix_.c_str());
+  sprintf(a2, "el%s_ecaldrv[el%s_n]/O", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ecaldrv, a2);
 
-  sprintf(a1, "el_%s_ip_ctf", nome);
-  sprintf(a2, "el_%s_ip_ctf[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_ip_ctf", prefix_.c_str());
+  sprintf(a2, "el%s_ip_ctf[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ip_ctf, a2);
 
-  sprintf(a1, "el_%s_ip_gsf", nome);
-  sprintf(a2, "el_%s_ip_gsf[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_ip_gsf", prefix_.c_str());
+  sprintf(a2, "el%s_ip_gsf[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ip_gsf, a2);
 
-  sprintf(a1, "el_%s_dist", nome);
-  sprintf(a2, "el_%s_dist[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_dist", prefix_.c_str());
+  sprintf(a2, "el%s_dist[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_dist, a2);
 
-  sprintf(a1, "el_%s_dcot", nome);
-  sprintf(a2, "el_%s_dcot[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_dcot", prefix_.c_str());
+  sprintf(a2, "el%s_dcot[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_dcot, a2);
 
-  sprintf(a1, "el_%s_hp_1pxb", nome);
-  sprintf(a2, "el_%s_hp_1pxb[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_hp_1pxb", prefix_.c_str());
+  sprintf(a2, "el%s_hp_1pxb[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_1pxb, a2);
 
-  sprintf(a1, "el_%s_hp_1pxf", nome);
-  sprintf(a2, "el_%s_hp_1pxf[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_hp_1pxf", prefix_.c_str());
+  sprintf(a2, "el%s_hp_1pxf[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_1pxf, a2);
 
-  sprintf(a1, "el_%s_conv", nome);
-  sprintf(a2, "el_%s_conv[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_conv", prefix_.c_str());
+  sprintf(a2, "el%s_conv[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_conv, a2);
 
-  sprintf(a1, "el_%s_corr_energy", nome);
-  sprintf(a2, "el_%s_corr_energy[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_corr_energy", prefix_.c_str());
+  sprintf(a2, "el%s_corr_energy[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_corr_energy, a2);
 
-  sprintf(a1, "el_%s_corr_energyerr", nome);
-  sprintf(a2, "el_%s_corr_energyerr[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_corr_energyerr", prefix_.c_str());
+  sprintf(a2, "el%s_corr_energyerr[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_corr_energyerr, a2);
 
-  sprintf(a1, "el_%s_calib_energy", nome);
-  sprintf(a2, "el_%s_calib_energy[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_calib_energy", prefix_.c_str());
+  sprintf(a2, "el%s_calib_energy[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_calib_energy, a2);
 
-  sprintf(a1, "el_%s_calib_energyerr", nome);
-  sprintf(a2, "el_%s_calib_energyerr[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_calib_energyerr", prefix_.c_str());
+  sprintf(a2, "el%s_calib_energyerr[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_calib_energyerr, a2);
 
-  sprintf(a1, "el_%s_regr_energy", nome);
-  sprintf(a2, "el_%s_regr_energy[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_regr_energy", prefix_.c_str());
+  sprintf(a2, "el%s_regr_energy[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_regr_energy, a2);
 
-  sprintf(a1, "el_%s_regr_energyerr", nome);
-  sprintf(a2, "el_%s_regr_energyerr[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_regr_energyerr", prefix_.c_str());
+  sprintf(a2, "el%s_regr_energyerr[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_regr_energyerr, a2);
 
-  sprintf(a1, "el_%s_eleopout", nome);
-  sprintf(a2, "el_%s_eleopout[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_eleopout", prefix_.c_str());
+  sprintf(a2, "el%s_eleopout[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_eleopout, a2);
 
-  sprintf(a1, "el_%s_detaeleout", nome);
-  sprintf(a2, "el_%s_detaeleout[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_detaeleout", prefix_.c_str());
+  sprintf(a2, "el%s_detaeleout[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_detaeleout, a2);
 
-  sprintf(a1, "el_%s_kfhits", nome);
-  sprintf(a2, "el_%s_kfhits[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_kfhits", prefix_.c_str());
+  sprintf(a2, "el%s_kfhits[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_kfhits, a2);
 
-  sprintf(a1, "el_%s_kfchi2", nome);
-  sprintf(a2, "el_%s_kfchi2[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_kfchi2", prefix_.c_str());
+  sprintf(a2, "el%s_kfchi2[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_kfchi2, a2);
 
-  sprintf(a1, "el_%s_psenergy", nome);
-  sprintf(a2, "el_%s_psenergy[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_psenergy", prefix_.c_str());
+  sprintf(a2, "el%s_psenergy[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_psenergy, a2);  
 
-  sprintf(a1, "el_%s_passmvapresel", nome);
-  sprintf(a2, "el_%s_passmvapresel[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_passmvapresel", prefix_.c_str());
+  sprintf(a2, "el%s_passmvapresel[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_passmvapresel, a2);
 
-  sprintf(a1, "el_%s_passcutpresel", nome);
-  sprintf(a2, "el_%s_passcutpresel[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_passcutpresel", prefix_.c_str());
+  sprintf(a2, "el%s_passcutpresel[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_passcutpresel, a2);
 
-  sprintf(a1, "el_%s_psenergypf", nome);
-  sprintf(a2, "el_%s_psenergypf[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_psenergypf", prefix_.c_str());
+  sprintf(a2, "el%s_psenergypf[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_psenergypf, a2);  
   
-  sprintf(a1, "el_%s_nbrempf", nome);
-  sprintf(a2, "el_%s_nbrempf[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_nbrempf", prefix_.c_str());
+  sprintf(a2, "el%s_nbrempf[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_nbrempf, a2);
 
-  sprintf(a1, "el_%s_eseedpf", nome);
-  sprintf(a2, "el_%s_eseedpf[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_eseedpf", prefix_.c_str());
+  sprintf(a2, "el%s_eseedpf[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_eseedpf, a2);
 
-  sprintf(a1, "el_%s_epf", nome);
-  sprintf(a2, "el_%s_epf[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_epf", prefix_.c_str());
+  sprintf(a2, "el%s_epf[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_epf, a2);
 
-  sprintf(a1, "el_%s_psly1", nome);
-  sprintf(a2, "el_%s_psly1[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_psly1", prefix_.c_str());
+  sprintf(a2, "el%s_psly1[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_psly1, a2);
 
-  sprintf(a1, "el_%s_psly2", nome);
-  sprintf(a2, "el_%s_psly2[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_psly2", prefix_.c_str());
+  sprintf(a2, "el%s_psly2[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_psly2, a2);
 
-  sprintf(a1, "el_%s_psnstriply1", nome);
-  sprintf(a2, "el_%s_psnstriply1[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_psnstriply1", prefix_.c_str());
+  sprintf(a2, "el%s_psnstriply1[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_psnstriply1, a2);
 
-  sprintf(a1, "el_%s_psnstriply2", nome);
-  sprintf(a2, "el_%s_psnstriply2[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_psnstriply2", prefix_.c_str());
+  sprintf(a2, "el%s_psnstriply2[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_psnstriply2, a2);
 
-  sprintf(a1, "el_%s_D0Vtx", nome);
-  sprintf(a2, "el_%s_D0Vtx[el_%s_n][100]/F", nome, nome);
+  sprintf(a1, "el%s_D0Vtx", prefix_.c_str());
+  sprintf(a2, "el%s_D0Vtx[el%s_n][100]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_D0Vtx, a2);
 
-  sprintf(a1, "el_%s_DZVtx", nome);
-  sprintf(a2, "el_%s_DZVtx[el_%s_n][100]/F", nome, nome);
+  sprintf(a1, "el%s_DZVtx", prefix_.c_str());
+  sprintf(a2, "el%s_DZVtx[el%s_n][100]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_DZVtx, a2);
 
-  sprintf(a1, "el_%s_must", nome);
-  sprintf(a2, "el_%s_must[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_must", prefix_.c_str());
+  sprintf(a2, "el%s_must[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_must, a2);
 
-  sprintf(a1, "el_%s_mustnc", nome);
-  sprintf(a2, "el_%s_mustnc[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_mustnc", prefix_.c_str());
+  sprintf(a2, "el%s_mustnc[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_mustnc, a2);
 
-  sprintf(a1, "el_%s_r9", nome);
-  sprintf(a2, "el_%s_r9[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_r9", prefix_.c_str());
+  sprintf(a2, "el%s_r9[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_r9, a2);
 
-  sprintf(a1, "el_%s_gsfchi2", nome);
-  sprintf(a2, "el_%s_gsfchi2[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_gsfchi2", prefix_.c_str());
+  sprintf(a2, "el%s_gsfchi2[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_gsfchi2, a2);
   
-  sprintf(a1, "el_%s_ip3d", nome);
-  sprintf(a2, "el_%s_ip3d[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_ip3d", prefix_.c_str());
+  sprintf(a2, "el%s_ip3d[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ip3d, a2);
 
-  sprintf(a1, "el_%s_ip3d_err", nome);
-  sprintf(a2, "el_%s_ip3d_err[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_ip3d_err", prefix_.c_str());
+  sprintf(a2, "el%s_ip3d_err[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ip3d_err, a2);
 
-  sprintf(a1, "el_%s_ip3d_sig", nome);
-  sprintf(a2, "el_%s_ip3d_sig[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_ip3d_sig", prefix_.c_str());
+  sprintf(a2, "el%s_ip3d_sig[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_ip3d_sig, a2);
 
-  sprintf(a1, "el_%s_sc_time", nome);
-  sprintf(a2, "el_%s_sc_time[el_%s_n]/I", nome, nome);
+  sprintf(a1, "el%s_sc_time", prefix_.c_str());
+  sprintf(a2, "el%s_sc_time[el%s_n]/I", prefix_.c_str(), prefix_.c_str());
   ana->Branch(a1, &el_sc_time, a2);
 
-  sprintf(a1, "el_%s_conv_vtxProb", nome);
-  sprintf(a2, "el_%s_conv_vtxProb[el_%s_n]/F", nome, nome);
+  sprintf(a1, "el%s_conv_vtxProb", prefix_.c_str());
+  sprintf(a2, "el%s_conv_vtxProb[el%s_n]/F", prefix_.c_str(), prefix_.c_str());
+
   ana->Branch(a1, &el_conv_vtxProb, a2);
 }
-
 
 bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
@@ -652,9 +618,9 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<reco::VertexCollection> vtxH;
   iEvent.getByLabel(vertexColl, vtxH);
 
-  edm::Handle<double> rhoHandle;
-  iEvent.getByLabel(rhoCollection, rhoHandle);
-  double rho = *(rhoHandle.product());
+  //edm::Handle<double> rhoHandle;
+  //iEvent.getByLabel(rhoCollection, rhoHandle);
+  //double rho = *(rhoHandle.product());
   
   // transient track builder needed for ele ID MVA
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder_);  
@@ -672,7 +638,6 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", hTransientTrackBuilder);
   transientTrackBuilder = hTransientTrackBuilder.product();
 
-  //typedef std::vector< edm::Handle< edm::ValueMap<double> > > IsoDepositVals;
   //IsoDepositVals electronIsoVals(3);
   //for (size_t j = 0; j<inputTagIsoValElectronsPFId_.size(); ++j) {
   //  iEvent.getByLabel(inputTagIsoValElectronsPFId_[j], electronIsoVals[j]);
@@ -855,9 +820,9 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     }
 
     if (regressionVersion == "V3") {
-      std::pair<double,double> cor = ecorr_.CorrectedEnergyWithErrorV3(egsf, *vtxH, rho, ecalLazyTool, iSetup);
-      el_regr_energy[el_n]    = cor.first;
-      el_regr_energyerr[el_n] = cor.second;
+      //std::pair<double,double> cor = ecorr_.CorrectedEnergyWithErrorV3(egsf, *vtxH, rho, ecalLazyTool, iSetup);
+      el_regr_energy[el_n]    = 0;//cor.first;
+      el_regr_energyerr[el_n] = 0;//cor.second;
     } else {
       std::pair<double,double> cor = ecorr_.CorrectedEnergyWithError(egsf, *vtxH, ecalLazyTool, iSetup);
       el_regr_energy[el_n]    = cor.first;
@@ -1048,20 +1013,17 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       bchits.push_back((egsf.superCluster()->seed()->hitsAndFractions())[j].first);
     el_bchits->push_back(bchits);
 
-    //el_mva_noiso[el_n] = egsf.mva();
-    //el_mva[el_n] = mvaEstimator->mva(egsf, vtxH->size());
-    
     el_mva_nontrig[el_n] = myMVANonTrig->mvaValue(egsf, 
-						    vtxH->front(), 
-						    thebuilder,
-						    ecalLazyTool,
-						    false);
-       
+						  vtxH->front(), 
+						  thebuilder,
+						  ecalLazyTool,
+						  false);
+    
     el_mva_trig[el_n] = myMVATrig->mvaValue(egsf,
-					      vtxH->front(),
-					      thebuilder,
-					      ecalLazyTool,
-					      false);
+					    vtxH->front(),
+					    thebuilder,
+					    ecalLazyTool,
+					    false);
     
     //std::cout<<"el_n el_mva_trig el_mva_nontrig "<<el_n<<" "<<el_mva_trig[el_n]<<" "<<el_mva_nontrig[el_n]<<std::endl;
 
@@ -1102,26 +1064,26 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     el_ecaldrv[el_n] = egsf.ecalDrivenSeed();
     el_tkdrv[el_n] = egsf.trackerDrivenSeed();
     
-    el_pfiso_charged[el_n] = egsf.pfIsolationVariables().chargedHadronIso; //(*(electronIsoVals[0].product()))[myElectronRef]; //egsf.pfIsolationVariables().chargedHadronIso;
-    el_pfiso_photon[el_n]  = egsf.pfIsolationVariables().photonIso; //(*(electronIsoVals[1].product()))[myElectronRef]; //egsf.pfIsolationVariables().photonIso;
-    el_pfiso_neutral[el_n] = egsf.pfIsolationVariables().neutralHadronIso; //(*(electronIsoVals[2].product()))[myElectronRef]; //egsf.pfIsolationVariables().neutralHadronIso;
+    el_pfiso_charged[el_n] = egsf.pfIsolationVariables().chargedHadronIso;//(*(electronIsoVals[0].product()))[myElectronRef]; //
+    el_pfiso_photon[el_n]  = egsf.pfIsolationVariables().photonIso	 ;//(*(electronIsoVals[1].product()))[myElectronRef]; //
+    el_pfiso_neutral[el_n] = egsf.pfIsolationVariables().neutralHadronIso;//(*(electronIsoVals[2].product()))[myElectronRef]; //
 
-    el_tkiso04[el_n] = egsf.dr04TkSumPt();
+    el_tkiso04[el_n]   = egsf.dr04TkSumPt();
     el_ecaliso04[el_n] = egsf.dr04EcalRecHitSumEt();
     el_hcaliso04[el_n] = egsf.dr04HcalTowerSumEt();    
 
-    el_tkiso03[el_n] = egsf.dr03TkSumPt();
+    el_tkiso03[el_n]   = egsf.dr03TkSumPt();
     el_ecaliso03[el_n] = egsf.dr03EcalRecHitSumEt();
     el_hcaliso03[el_n] = egsf.dr03HcalTowerSumEt();
 
-    EgammaTowerIsolation hcaliso03(0.3, 0., 0, -1, ctH.product());
-    EgammaTowerIsolation hcaliso04(0.4, 0., 0, -1, ctH.product());
-
-    el_hcalsolidiso03[el_n] = hcaliso03.getTowerEtSum(&(*(egsf.superCluster())) );
-    el_hcalsolidiso04[el_n] = hcaliso04.getTowerEtSum(&(*(egsf.superCluster())) );
-
-    el_hcalbciso03[el_n] = egsf.dr03HcalTowerSumEtBc();
-    el_hcalbciso04[el_n] = egsf.dr04HcalTowerSumEtBc();
+    //EgammaTowerIsolation hcaliso03(0.3, 0., 0, -1, ctH.product());
+    //EgammaTowerIsolation hcaliso04(0.4, 0., 0, -1, ctH.product());
+    //
+    //el_hcalsolidiso03[el_n] = hcaliso03.getTowerEtSum(&(*(egsf.superCluster())) );
+    //el_hcalsolidiso04[el_n] = hcaliso04.getTowerEtSum(&(*(egsf.superCluster())) );
+    //
+    //el_hcalbciso03[el_n] = egsf.dr03HcalTowerSumEtBc();
+    //el_hcalbciso04[el_n] = egsf.dr04HcalTowerSumEtBc();
 
     // Fill out electron identification
     std::vector<edm::Handle<edm::ValueMap<float> > > eIDVM(9); 
@@ -1181,11 +1143,6 @@ std::pair<unsigned int, float> GlobeElectrons::sharedHits(const reco::Track& tra
   float fraction = (float) shared/std::min(trackA.found(),trackB.found());
   return std::make_pair(shared,fraction);
 }
-
-
-
-
-
 
 
 

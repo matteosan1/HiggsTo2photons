@@ -8,14 +8,10 @@ branchesToSkim.extend((
  'bc_islbar_n',
  'bc_islend_n',
  'bc_nhits',
- 'bc_s1',
  'bc_s4',
- 'bc_s9',
- 'bc_sieie',
  'bc_sieip',
  'bc_sipip',
  'bc_type',
- 'bc_xyz',
  'bs_sigmaZ0Error',
  'bs_x0Error',
  'bs_y0Error',
@@ -67,13 +63,22 @@ branchesToSkim.extend((
  'conv_vtx_yErr',
  'conv_vtx_zErr',
  'conv_zofprimvtxfromtrks',
+<<<<<<< HEAD
+=======
+ 'ct_n',
+ 'ct_p4',
+>>>>>>> development
  'ct_emEnergy',
  'ct_emL1',
  'ct_hadEnergy',
  'ct_hadL1',
+<<<<<<< HEAD
  'ct_n',
  'ct_outerEnergy',
  'ct_p4',
+=======
+ 'ct_outerEnergy',
+>>>>>>> development
  'ct_size',
  'ecalhit_flag',
  'ecalhit_ieta',
@@ -137,7 +142,10 @@ branchesToSkim.extend((
  'el_std_nambtk',
  'el_std_nbrem',
  'el_std_nbrempf',
+<<<<<<< HEAD
  'el_std_p4_corr',
+=======
+>>>>>>> development
  'el_std_passcutpresel',
  'el_std_passmvapresel',
  'el_std_poscalo',
@@ -150,8 +158,13 @@ branchesToSkim.extend((
  'el_std_psnstriply2',
  'el_std_r9',
  'el_std_sc_time',
+<<<<<<< HEAD
  'el_std_schits',
  'el_std_sieiesc',
+=======
+ 'el_std_sieiesc',
+ 'el_std_schits',
+>>>>>>> development
  'el_std_sipip',
  'el_std_tkiso04',
  'el_std_validhits',
@@ -328,8 +341,11 @@ branchesToSkim.extend((
  'pfcand_mva_nothing_nh',
  'pfcand_mva_pi_mu',
  'pfcand_overlappho',
+<<<<<<< HEAD
  'pfcand_poscalo',
  'pfcand_posvtx',
+=======
+>>>>>>> development
  'pfcand_ps1energy',
  'pfcand_ps2energy',
  'pfcand_rawecalenergy',
@@ -339,7 +355,10 @@ branchesToSkim.extend((
  'pho_PfEleVeto',
  'pho_barrel',
  'pho_bchits',
+<<<<<<< HEAD
  'pho_betacry',
+=======
+>>>>>>> development
  'pho_cep',
  'pho_cep_global',
  'pho_conv_MVALikelihood',
@@ -424,7 +443,10 @@ branchesToSkim.extend((
  'sc_5xN',
  'sc_barrel',
  'sc_bccrackcorr',
+<<<<<<< HEAD
  'sc_bcind',
+=======
+>>>>>>> development
  'sc_bclocalcorr',
  'sc_brem',
  'sc_hybrid_n',
@@ -437,7 +459,10 @@ branchesToSkim.extend((
  'sc_islbar_seedenergy',
  'sc_islbar_xyz',
  'sc_islend_n',
+<<<<<<< HEAD
  'sc_nbc',
+=======
+>>>>>>> development
  'sc_r9',
  'sc_sieie',
  'selector_bits',
@@ -470,7 +495,10 @@ branchesToSkim.extend((
  'vtx_nobs_vectorp3',
  'vtx_nobs_x2dof',
  'vtx_nobs_xyz',
+<<<<<<< HEAD
  'vtx_std_dxdydz',
+=======
+>>>>>>> development
  'vtx_std_ndof',
  'vtx_std_scalarpt',
  'vtx_std_vectorp3'))

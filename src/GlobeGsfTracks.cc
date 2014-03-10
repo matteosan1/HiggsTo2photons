@@ -1,7 +1,7 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeGsfTracks.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "DataFormats/GsfTrackReco/interface/GsfTrackExtra.h"
-
+#include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "TrackingTools/GsfTools/interface/MultiTrajectoryStateTransform.h"
 #include "TrackingTools/GsfTools/interface/MultiTrajectoryStateMode.h"
 #include "TrackingTools/GsfTools/interface/MultiGaussianState1D.h"
@@ -17,7 +17,7 @@ GlobeGsfTracks::GlobeGsfTracks(const edm::ParameterSet& iConfig, const char* n):
   tpColl       = iConfig.getParameter<edm::InputTag>("TPColl");
   assocLabel   = iConfig.getParameter<std::string>("AssocLabel");
   debug_level  = iConfig.getParameter<int>("Debug_Level");
-  electronColl = iConfig.getParameter<edm::InputTag>("ElectronColl_std");
+  electronColl = iConfig.getParameter<edm::InputTag>("ElectronColl");
 
   // get cut thresholds
   gCUT = new GlobeCuts(iConfig);
@@ -199,7 +199,7 @@ void GlobeGsfTracks::GetAssociatedTrackingParticleIndex(const edm::Event& iEvent
   iSetup.get<TrackAssociatorRecord>().get(assocLabel, theAssociator);
   
   // call the associator functions:
-  reco::RecoToSimCollection recSimColl = theAssociator->associateRecoToSim(tkH, tpH, &iEvent);
+  reco::RecoToSimCollection recSimColl = theAssociator->associateRecoToSim(tkH, tpH, &iEvent, &iSetup);
   
   TrackingParticleRef associatedTrackingParticle;
   

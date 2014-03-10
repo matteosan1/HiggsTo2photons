@@ -80,6 +80,8 @@ public:
   void defineBranch();
   void fillTree();
 
+  int findModule(std::string type, std::string prefix="");
+
   template <class T> void Branch(const char* name, T* address, const char* leaflist, Int_t bufsize = 32000) {
     for (unsigned int i=0; i<branchesToSkim.size(); i++) {
       if (strcmp(name, branchesToSkim[i].c_str()) == 0) {
@@ -102,40 +104,7 @@ public:
      tree->Branch(name, classname, obj, bufsize, splitlevel);
   }
 
-
-  GlobeCommon* common;
-  GlobePhotons* photons;
-  GlobeConversions* allConversions;
-  GlobePFCandidates* pfCandidates;
-  GlobeEcalClusters* ecalclusters;
-  GlobeMET* met, *tcmet, *pfmet; 
-  GlobeCaloTowers* calotowers;
-  GlobeHcal* hcalhits;
-  GlobeL1* level1;
-  GlobeVertex* vertex_std;
-  GlobeVertex* vertex_nobs;
-  GlobeSimHits* simhits;
-  GlobeSimTracks* simtracks;
-  GlobeTracks* tracks;
-  GlobeGsfTracks* gsfTracks;
-  GlobeTrackingParticles* trackingParticles;
-  GlobeElectrons* std_electrons; //, *gge_electrons;
-  GlobeMuons* global_muons, *tk_muons, *sta_muons, *muons;
-  GlobeJets* algo1_jets, *algo2_jets, *algo3_jets, *algoPF1_jets, *algoPF2_jets, *algoPF3_jets ;
-  GlobeGenerator* gen;
-  GlobeGenParticles* genP;
-  GlobeGenVertices* genV;
-  GlobeGenJets* algo1_genJets, *algo2_genJets, *algo3_genJets;
-  GlobeEcalHits* ecalrechits;
-  GlobeHLT* hlt;
-  GlobeSelector* selector;
-  GlobeLeptons* leptons;
-  GlobeHT* ht;
-  //GlobePAT* pat;
-  GlobeReducedGen* reducedgen;
-  GlobeRho* rho1, *rho2, *rho3;
-  GlobePileup* pileup;
-  GlobePdfWeights* pdfweights;
+  std::vector<GlobeBase*> container;
 
 private:
   void beginJob();
@@ -148,7 +117,6 @@ private:
   TFile *file;
   TTree *tree, *tree2, *lumitree;
 
-  //std::vector<std::string> a, b;
   std::vector<std::string> *parameters;
   std::vector<std::string> *hlt_path_names, *reduced_path;
   std::vector<int>* reduced_index;
@@ -162,57 +130,12 @@ private:
   int selector_bits;
 
   int debug_level;
-
-  bool doElectronStd;
-  bool doPFCandidates;
-  bool doMuon;
-  bool doMuonGlobal;
-  bool doMuonTk;
-  bool doMuonSta;
-  bool doJetAlgo1;
-  bool doJetAlgo2;
-  bool doJetAlgo3;
-  bool doJetAlgoPF1;
-  bool doJetAlgoPF2;
-  bool doJetAlgoPF3;
-  bool doGenJetAlgo1;
-  bool doGenJetAlgo2;
-  bool doGenJetAlgo3;
-  bool doGenerator;
-  bool doGenParticles;
-  bool doGenVertices;
-  bool doCaloTower;
-  bool doHcal;
-  bool doEcal;
-  bool doPhoton;
-  bool doAllConversions;
-  bool doL1;
-  bool doVertices_std;
-  bool doVertices_nobs;
-  bool doMet;
-  bool dotcMet;
-  bool doPFMet;
-  bool doSimHits;
-  bool doSimTracks;
-  bool doTracks;
-  bool doGsfTracks;
-  bool doTrackingParticles;
-  bool doEcalRecHits;
-  bool doTkRecHits;
-  bool doHLT;
-  bool doReducedGen;
-  bool doLeptons;
-  bool doHt;
-  bool doPAT;
-  bool doRho;
-  bool doPileup;
-  bool doPdfWeight;
   
-  bool fullHLT;
-  std::vector<edm::InputTag> theElHLTLabels;
-  std::vector<edm::InputTag> theMuHLTLabels;
-  std::vector<edm::InputTag> thePhHLTLabels;
-  std::vector<edm::InputTag> theJetHLTLabels;
+  // bool fullHLT;
+  //std::vector<edm::InputTag> theElHLTLabels;
+  //std::vector<edm::InputTag> theMuHLTLabels;
+  //std::vector<edm::InputTag> thePhHLTLabels;
+  //std::vector<edm::InputTag> theJetHLTLabels;
 
   Int_t nProcessedEvents;
 };

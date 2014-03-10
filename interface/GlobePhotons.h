@@ -41,6 +41,8 @@ class GlobeAnalyzer;
 
 typedef math::XYZTLorentzVector LorentzVector;
 
+class GlobeAnalyzer;
+
 class GlobePhotons {
  public:
 
@@ -415,6 +417,7 @@ class GlobePhotons {
   EGEnergyCorrector ecorr_;
   
   bool energyCorrectionsFromDB;
+  bool haveTowers;
   std::string energyRegFilename;
   std::string regressionVersion;
 };

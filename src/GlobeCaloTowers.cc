@@ -1,7 +1,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeCaloTowers.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
-
 GlobeCaloTowers::GlobeCaloTowers(const edm::ParameterSet& iConfig, const char* n): nome(n) {
   
   calotowerColl =  iConfig.getParameter<edm::InputTag>("CaloTowerColl");
@@ -12,7 +11,7 @@ GlobeCaloTowers::GlobeCaloTowers(const edm::ParameterSet& iConfig, const char* n
 }
 
 void GlobeCaloTowers::defineBranch(GlobeAnalyzer* ana) {
-    
+
   ana->Branch("ct_n", &ct_n, "ct_n/I");
   
   ct_p4 = new TClonesArray("TLorentzVector", MAX_CALOTOWERS);

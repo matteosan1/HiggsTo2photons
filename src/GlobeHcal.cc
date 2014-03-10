@@ -1,7 +1,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeHcal.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
-
 GlobeHcal::GlobeHcal(const edm::ParameterSet& iConfig, const char* n): nome(n) {
 
   hcalBEColl =  iConfig.getParameter<edm::InputTag>("HcalHitsBEColl");

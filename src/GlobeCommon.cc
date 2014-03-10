@@ -19,10 +19,10 @@ void GlobeCommon::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("weight", &weight, "weight/F");
 }
 
-void GlobeCommon::defineLumiBranch(TTree* tree) {
+void GlobeCommon::defineLumiBranch(TTree* ana) {
 
-  tree->Branch("run", &run, "run/I");
-  tree->Branch("lumis", &lumis, "lumis/I");
+  ana->Branch("run", &run, "run/I");
+  ana->Branch("lumis", &lumis, "lumis/I");
 }
 
 bool GlobeCommon::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -38,7 +38,7 @@ bool GlobeCommon::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   //std::cout<<"event run "<<event<<" "<<run<<std::endl;
   // add event PTHAT
   iEvent.getByLabel(generatorColl, HepMCEvt);
-  iEvent.getByLabel ("csa07EventWeightProducer","weight", weightHandle);
+  iEvent.getByLabel ("generator", "weight", weightHandle);
   
   if (HepMCEvt.isValid()) {
 

@@ -1,7 +1,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeSimTracks.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
-
 GlobeSimTracks::GlobeSimTracks(const edm::ParameterSet& iConfig, const char* n): nome(n) {
 
   simtrackColl 	= iConfig.getParameter<edm::InputTag>("SimTrackColl");

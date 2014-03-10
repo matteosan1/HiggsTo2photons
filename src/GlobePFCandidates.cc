@@ -22,13 +22,15 @@
 GlobePFCandidates::GlobePFCandidates(const edm::ParameterSet& iConfig) {
   
   pfColl = iConfig.getParameter<edm::InputTag>("PFCandidateColl");
-  electronCollStd = iConfig.getParameter<edm::InputTag>("ElectronColl_std");
+  electronCollStd = iConfig.getParameter<edm::InputTag>("ElectronColl");
   photonCollStd =  iConfig.getParameter<edm::InputTag>("PhotonCollStd");
   PFIsoOuterConeSize = iConfig.getParameter<double>("PFIsoOuterCone");
   debug_level = iConfig.getParameter<int>("Debug_Level");
-
+  
   // get cut thresholds
   gCUT = new GlobeCuts(iConfig);
+
+  pfcand_hitind = new std::vector<std::vector<short>>;
 }
 
 void GlobePFCandidates::defineBranch(GlobeAnalyzer* ana) {
@@ -43,9 +45,7 @@ void GlobePFCandidates::defineBranch(GlobeAnalyzer* ana) {
 
   ana->Branch("pfcand_n", &pfcand_n, "pfcand_n/I");
   ana->Branch("pfcand_pdgid",&pfcand_pdgid,"pfcand_pdgid[pfcand_n]/I");
-  //ana->Branch("pfcand_tkind", &pfcand_tkind, "pfcand_tkind[pfcand_n]/I");
-  //ana->Branch("pfcand_gsfind", &pfcand_gsfind, "pfcand_gsfind[pfcand_n]/I");
-  //ana->Branch("pfcand_muind", &pfcand_muind, "pfcand_muind[pfcand_n]/I");
+
   ana->Branch("pfcand_ecalenergy", &pfcand_ecalEnergy, "pfcand_ecalenergy[pfcand_n]/F");
   ana->Branch("pfcand_hcalenergy", &pfcand_hcalEnergy, "pfcand_hcalenergy[pfcand_n]/F");
   ana->Branch("pfcand_rawecalenergy", &pfcand_rawEcalEnergy, "pfcand_rawecalenergy[pfcand_n]/F");
@@ -53,20 +53,14 @@ void GlobePFCandidates::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("pfcand_ps1energy", &pfcand_ps1Energy, "pfcand_ps1energy[pfcand_n]/F");
   ana->Branch("pfcand_ps2energy", &pfcand_ps2Energy, "pfcand_ps2energy[pfcand_n]/F");
   ana->Branch("pfcand_momerr", &pfcand_momErr, "pfcand_momerr[pfcand_n]/F");
-  ana->Branch("pfcand_mva_e_pi", &pfcand_mva_e_pi, "pfcand_mva_e_pi[pfcand_n]/F");
-  ana->Branch("pfcand_mva_e_mu", &pfcand_mva_e_mu, "pfcand_mva_e_mu[pfcand_n]/F");
-  ana->Branch("pfcand_mva_pi_mu", &pfcand_mva_pi_mu, "pfcand_mva_pi_mu[pfcand_n]/F");
-  ana->Branch("pfcand_mva_nothing_gamma", &pfcand_mva_nothing_gamma, "pfcand_mva_nothing_gamma[pfcand_n]/F");
-  ana->Branch("pfcand_mva_nothing_nh", &pfcand_mva_nothing_nh, "pfcand_mva_nothing_nh[pfcand_n]/F");
-  ana->Branch("pfcand_mva_gamma_nh", &pfcand_mva_gamma_nh, "pfcand_mva_gamma_nh[pfcand_n]/F");
-  ana->Branch("pfcand_vz",&pfcand_vz,"pfcand_vz[pfcand_n]/F");
-  ana->Branch("pfcand_overlappho",&pfcand_overlappho,"pfcand_overlappho[pfcand_n]/i");
+
   ana->Branch("pfcand_ispu",&pfcand_ispu,"pfcand_ispu[pfcand_n]/i");
-  //ana->Branch("pfcand_overlappho",&pfcand_overlappho,"pfcand_overlappho[pfcand_n][pho_n]/I");
+  ana->Branch("pfcand_hitind", "std::vector<std::vector<short> > ", &pfcand_hitind);
 }
 
-bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup, GlobeTracks* tks, GlobeMuons* mus, GlobePhotons* phos) {
+bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup, GlobeTracks* tks, GlobeMuons* mus, GlobePhotons* phos, GlobeEcalHits* hits) {
 
+  pfcand_hitind->clear();
   pfcand_p4->Clear(); 
   pfcand_poscalo->Clear(); 
   pfcand_posvtx->Clear(); 
@@ -79,9 +73,9 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
   std::vector<reco::PFCandidate> candidates = (*pfCandidatesH.product());
 
   //PF Candidates from PileUp
-  edm::Handle<reco::PFCandidateCollection> pfCandidatesPileUpH;
+  edm::Handle<std::vector< edm::FwdPtr<reco::PFCandidate> >> pfCandidatesPileUpH;
   iEvent.getByLabel("pfPileUp", pfCandidatesPileUpH);
-  std::vector<reco::PFCandidate> pucandidates = (*pfCandidatesPileUpH.product());
+  std::vector< edm::FwdPtr<reco::PFCandidate> > pucandidates = (*pfCandidatesPileUpH.product());
 
   edm::Handle < reco::GsfElectronCollection > theEGammaCollection;
   iEvent.getByLabel(electronCollStd, theEGammaCollection);
@@ -98,10 +92,9 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
     bool save = false;  
     bool isCandFromPU = false;
-    unsigned npucandidates = pfCandidatesPileUpH->size();
+    unsigned npucandidates = pucandidates.size();
     for (unsigned npuit = 0; npuit < npucandidates; npuit++) {
-      edm::Ptr<reco::PFCandidate> ptr(pfCandidatesPileUpH, npuit);
-      float dR = deltaR(ptr->p4(), it->p4());
+      float dR = deltaR(pucandidates[npuit]->p4(), it->p4());
       if (dR < 1e-5) {
 	isCandFromPU = true;
 	break;
@@ -164,6 +157,21 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
     }
 
     if (save) {
+      std::vector<short> ecalhits;
+      reco::SuperClusterRef scRef = it->superClusterRef();
+      std::vector< std::pair<DetId, float> >::const_iterator itSC;
+      if (scRef.isNonnull()) {
+	for (int i=0; i < hits->ecalhit_n; i++) {
+	  for (itSC=scRef->hitsAndFractions().begin(); itSC != scRef->hitsAndFractions().end(); ++itSC) {
+	    if (hits->ecalhit_detid[i] == itSC->first.rawId()) {
+	      ecalhits.push_back(i);
+	      break;
+	    }
+	  }
+	}
+      }
+      pfcand_hitind->push_back(ecalhits);
+
       pfcand_pdgid[pfcand_n] = it->particleId();
       pfcand_ecalEnergy[pfcand_n] = it->ecalEnergy();
       pfcand_hcalEnergy[pfcand_n] = it->hcalEnergy();
@@ -172,12 +180,12 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
       pfcand_ps1Energy[pfcand_n] = it->pS1Energy();
       pfcand_ps2Energy[pfcand_n] = it->pS2Energy();
       pfcand_momErr[pfcand_n] = it->deltaP();
-      pfcand_mva_e_pi[pfcand_n] = it->mva_e_pi();
-      pfcand_mva_e_mu[pfcand_n] = it->mva_e_mu();
-      pfcand_mva_pi_mu[pfcand_n] = it->mva_pi_mu();
-      pfcand_mva_nothing_gamma[pfcand_n] = it->mva_nothing_gamma();
-      pfcand_mva_nothing_nh[pfcand_n] = it->mva_nothing_nh();
-      pfcand_mva_gamma_nh[pfcand_n] = it->mva_gamma_nh();
+      //pfcand_mva_e_pi[pfcand_n] = it->mva_e_pi();
+      //pfcand_mva_e_mu[pfcand_n] = it->mva_e_mu();
+      //pfcand_mva_pi_mu[pfcand_n] = it->mva_pi_mu();
+      //pfcand_mva_nothing_gamma[pfcand_n] = it->mva_nothing_gamma();
+      //pfcand_mva_nothing_nh[pfcand_n] = it->mva_nothing_nh();
+      //pfcand_mva_gamma_nh[pfcand_n] = it->mva_gamma_nh();
       
       new ((*pfcand_p4)[pfcand_n]) TLorentzVector();
       ((TLorentzVector *)pfcand_p4->At(pfcand_n))->SetXYZT(it->px(), it->py(), it->pz(), it->energy());
@@ -192,10 +200,10 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
 							it->vy(), 
 							it->vz());
       
-      pfcand_vz[pfcand_n] = 9999;
-      if(it->particleId() == 1 ) {
-	pfcand_vz[pfcand_n] = it->trackRef()->vz();
-      }
+      //pfcand_vz[pfcand_n] = 9999;
+      //if(it->particleId() == 1 ) {
+      //pfcand_vz[pfcand_n] = it->trackRef()->vz();
+      //}
 
       pfcand_ispu[pfcand_n] = 0;
       if (isCandFromPU)

@@ -2,6 +2,9 @@
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeJets.h"
 
+#include "PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h"
+
+#include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "DataFormats/JetReco/interface/CaloJet.h"
 #include "DataFormats/JetReco/interface/BasicJet.h"
 
@@ -12,13 +15,14 @@
 
 #include "DataFormats/JetReco/interface/JetTracksAssociation.h"
 #include "JetMETCorrections/Objects/interface/JetCorrector.h"
-#include "PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h"
+
 
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 
 #include "DataFormats/BTauReco/interface/JetTag.h"
 
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
+//#include "PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h"
 #include <iostream>
 
 GlobeJets::GlobeJets(const edm::ParameterSet& iConfig, const char* n = "algo1"): nome(n) {
@@ -107,6 +111,7 @@ void GlobeJets::defineBranch(GlobeAnalyzer* ana) {
   sprintf(a1, "jet_%s_elefrac", nome);
   sprintf(a2, "jet_%s_elefrac[jet_%s_n]/F", nome, nome);
   ana->Branch(a1, &jet_elefrac, a2);
+
 
   sprintf(a1, "jet_%s_emfrac", nome);
   sprintf(a2, "jet_%s_emfrac[jet_%s_n]/F", nome, nome);

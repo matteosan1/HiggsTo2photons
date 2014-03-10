@@ -26,6 +26,7 @@
 
 #include <iostream>
 
+class GlobeAnalyzer;
 class GlobeTrackingParticles;
 class GlobeAnalyzer;
 

@@ -1,7 +1,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeSimHits.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
-
 GlobeSimHits::GlobeSimHits(const edm::ParameterSet& iConfig, const char* n): nome(n) {
 
   simhitTIBLowColl			= iConfig.getParameter<edm::InputTag>("SimHitTIBLowColl");

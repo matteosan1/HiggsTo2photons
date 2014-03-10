@@ -8,7 +8,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeCuts.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeTrackingParticles.h"
 
-#include "TTree.h"
 #include "TClonesArray.h"
 #include "TLorentzVector.h"
 

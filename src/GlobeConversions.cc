@@ -7,7 +7,7 @@
 GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig, const char* n): nome(n) {
 
   char a[100];
-  sprintf(a, "ElectronColl_%s", nome);
+  sprintf(a, "ElectronColl%s", nome);
 
   debug_level = iConfig.getParameter<int>("Debug_Level");
   doAodSim = iConfig.getParameter<bool>("doAodSim");
@@ -157,7 +157,6 @@ bool GlobeConversions::analyze(const edm::Event& iEvent, const edm::EventSetup& 
   if (debug_level > 9) {
     std::cout << "GlobeConversions: allConversions collection size: "<< convH->size() << std::endl;
   }
-
 
   // now have collections
   conv_p4->Clear();

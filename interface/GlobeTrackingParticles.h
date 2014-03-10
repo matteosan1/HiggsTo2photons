@@ -101,7 +101,7 @@ class GlobeTrackingParticles {
   std::vector<SimVertex> theSimVertices;
 
   Int_t GetMotherSimTrack(const SimTrack&);
-  Int_t GetMotherGenParticle(const HepMC::GenParticle&);
+  Int_t GetMotherGenParticle(const reco::GenParticle&);
   
 };
 

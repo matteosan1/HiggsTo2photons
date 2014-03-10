@@ -1,7 +1,7 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeVertex.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
-
+#include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/Common/interface/RefToBase.h" 
 

@@ -1,5 +1,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobePhotons.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
+
 #include "HiggsAnalysis/HiggsTo2photons/interface/Tools.h"
 
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
@@ -17,8 +18,9 @@
 //#include "HiggsAnalysis/HiggsTo2photons/interface/pfFrixioneIso.h"
 //#include "HiggsAnalysis/HiggsToGammaGamma/interface/PhotonFix.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/PFIsolation.h"
-//#include "HiggsAnalysis/HiggsTo2photons/interface/Mustache.h"
-#include "RecoEgamma/EgammaTools/interface/ggPFPhotons.h"
+#include "HiggsAnalysis/HiggsTo2photons/interface/Mustache.h"
+//#include "RecoEgamma/EgammaTools/interface/ggPFPhotons.h"
+
 #include "DataFormats/Math/interface/deltaR.h"
 #include "TFile.h"
 #include <cstdlib>
@@ -42,13 +44,17 @@ void GlobePhotons::checkSetup(const edm::EventSetup& iSetup) {
   iSetup.get<EcalSeverityLevelAlgoRcd>().get(sevlv);
   sevLevel = sevlv.product(); 
 
-  hcalHelper->checkSetup(iSetup);
-  hcalHelperPflow->checkSetup(iSetup);
+  if (haveTowers) {
+    hcalHelper->checkSetup(iSetup);
+    hcalHelperPflow->checkSetup(iSetup);
+  }
 }
 
 GlobePhotons::~GlobePhotons() { 
-  delete hcalHelper;
-  delete hcalHelperPflow;
+  if (haveTowers) {
+    delete hcalHelper;
+    delete hcalHelperPflow;
+  }
 }
 
 GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nome(n) {
@@ -76,7 +82,7 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nom
 
   convertedPhotonColl =  iConfig.getParameter<edm::InputTag>("ConvertedPhotonColl");
   beamSpotColl =  iConfig.getParameter<edm::InputTag>("BeamSpot");
-  electronColl =  iConfig.getParameter<edm::InputTag>("ElectronColl_std");
+  electronColl =  iConfig.getParameter<edm::InputTag>("ElectronColl");
 
   rhoCollection = iConfig.getParameter<edm::InputTag>("rhoCollection_algo1");
   vtxCollection = iConfig.getParameter<edm::InputTag>("VertexColl_std");
@@ -126,17 +132,21 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nom
   cicPhotonId = new CiCPhotonID(iConfig);
   //pfFrixIso = new pfFrixioneIso(); 
 
-  hcalCfg.hOverEConeSize = 0.15;
-  hcalCfg.useTowers = true;
-  hcalCfg.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
-  hcalCfg.hOverEPtMin = 0;
-  hcalCfgPflow.hOverEConeSize = 0.15;
-  hcalCfgPflow.useTowers = true ;
-  hcalCfgPflow.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
-  hcalCfgPflow.hOverEPtMin = 0;
-
-  hcalHelper = new ElectronHcalHelper(hcalCfg);
-  hcalHelperPflow = new ElectronHcalHelper(hcalCfgPflow);
+  haveTowers = iConfig.getParameter<bool>("doCaloTower");
+  
+  if (haveTowers) {
+    hcalCfg.hOverEConeSize = 0.15;
+    hcalCfg.useTowers = true;
+    hcalCfg.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
+    hcalCfg.hOverEPtMin = 0;
+    hcalCfgPflow.hOverEConeSize = 0.15;
+    hcalCfgPflow.useTowers = true ;
+    hcalCfgPflow.hcalTowers = iConfig.getParameter<edm::InputTag>("CaloTowerColl");
+    hcalCfgPflow.hOverEPtMin = 0;
+    
+    hcalHelper = new ElectronHcalHelper(hcalCfg);
+    hcalHelperPflow = new ElectronHcalHelper(hcalCfgPflow);
+  }
 }
 
 
@@ -394,8 +404,10 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   //PhotonFix::initialiseGeometry(iSetup);
   checkSetup(iSetup);
 
-  hcalHelper->readEvent(const_cast<edm::Event &>(iEvent));
-  hcalHelperPflow->readEvent(const_cast<edm::Event &>(iEvent));
+  if (haveTowers) {
+    hcalHelper->readEvent(const_cast<edm::Event &>(iEvent));
+    hcalHelperPflow->readEvent(const_cast<edm::Event &>(iEvent));
+  }
 
   // get collections
   edm::Handle<reco::PhotonCollection> phoH;
@@ -464,8 +476,8 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   CaloSubdetectorTopology *topology_p = 0;
   if (geometryES) 
     topology_p = new EcalPreshowerTopology(geoHandle);
-  const CaloSubdetectorGeometry* geomBar_=geoHandle->getSubdetectorGeometry(DetId::Ecal,1);
-  const CaloSubdetectorGeometry* geomEnd_=geoHandle->getSubdetectorGeometry(DetId::Ecal,2);
+  //const CaloSubdetectorGeometry* geomBar_=geoHandle->getSubdetectorGeometry(DetId::Ecal,1);
+  //const CaloSubdetectorGeometry* geomEnd_=geoHandle->getSubdetectorGeometry(DetId::Ecal,2);
    
   // FOR PF ISOLATION
   edm::Handle<reco::PFCandidateCollection> pfCollection;
@@ -642,13 +654,13 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     EcalClusterLazyTools lazyTool(iEvent, iSetup, ecalHitEBColl, ecalHitEEColl);   
     if (regressionVersion == "V3") {
       std::pair<double,double> cor;
-      if (iEvent.isRealData()) 
-	cor = ecorr_.CorrectedEnergyWithErrorV3(*localPho, *hVertex, rho, lazyTool, iSetup);
-      else
-	cor = ecorr_.CorrectedEnergyWithErrorV3(*localPho, *hVertex, rho, lazyTool, iSetup, true);
-
-      pho_regr_energy[pho_n]    = cor.first;
-      pho_regr_energyerr[pho_n] = cor.second;
+      //if (iEvent.isRealData()) 
+      //	cor = ecorr_.CorrectedEnergyWithErrorV3(*localPho, *hVertex, rho, lazyTool, iSetup);
+      //else
+      //	cor = ecorr_.CorrectedEnergyWithErrorV3(*localPho, *hVertex, rho, lazyTool, iSetup, true);
+      //
+      pho_regr_energy[pho_n]    = 0;//cor.first;
+      pho_regr_energyerr[pho_n] = 0;//cor.second;
     } else {
       std::pair<double,double> cor = ecorr_.CorrectedEnergyWithError(*localPho, *hVertex, lazyTool, iSetup);
       pho_regr_energy[pho_n]    = cor.first;
@@ -745,25 +757,31 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_sieie[pho_n] = localPho->sigmaIetaIeta();
     pho_e1x5[pho_n] = localPho->e1x5();
     pho_e2x2[pho_n] = lazyTool.e2x2(*seed_clu);
+    pho_e1x3[pho_n] = lazyTool.e1x3(*seed_clu);
     pho_e3x3[pho_n] = localPho->e3x3();
     pho_e5x5[pho_n] = localPho->e5x5();
     pho_emaxxtal[pho_n] = localPho->maxEnergyXtal();
     pho_hoe[pho_n] = localPho->hadronicOverEm();
     pho_h1oe[pho_n] = localPho->hadronicDepth1OverEm();
     pho_h2oe[pho_n] = localPho->hadronicDepth2OverEm();
-
-    if (!(localPho->isStandardPhoton())) {
-      std::vector<CaloTowerDetId> caloTwId = hcalHelperPflow->hcalTowersBehindClusters(*(localPho->superCluster()));
-      pho_h1oe_bc[pho_n] = hcalHelperPflow->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
-      pho_h2oe_bc[pho_n] = hcalHelperPflow->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
-      pho_hoe_bc[pho_n]  = pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
-    } else {
-      std::vector<CaloTowerDetId> caloTwId = hcalHelper->hcalTowersBehindClusters(*(localPho->superCluster()));
-      pho_h1oe_bc[pho_n] = hcalHelper->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
-      pho_h2oe_bc[pho_n] = hcalHelper->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
-      pho_hoe_bc[pho_n]  = pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
-    }
     
+    pho_h1oe_bc[pho_n] = 0;//hcalHelper->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
+    pho_h2oe_bc[pho_n] = 0;//hcalHelper->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
+    pho_hoe_bc[pho_n]  = 0;//pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
+    if (haveTowers) {
+      if (!(localPho->isStandardPhoton())) {
+	std::vector<CaloTowerDetId> caloTwId = hcalHelperPflow->hcalTowersBehindClusters(*(localPho->superCluster()));
+	pho_h1oe_bc[pho_n] = hcalHelperPflow->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
+	pho_h2oe_bc[pho_n] = hcalHelperPflow->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
+	pho_hoe_bc[pho_n]  = pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
+      } else {
+	std::vector<CaloTowerDetId> caloTwId = hcalHelper->hcalTowersBehindClusters(*(localPho->superCluster()));
+	pho_h1oe_bc[pho_n] = hcalHelper->hcalESumDepth1BehindClusters(caloTwId)/localPho->superCluster()->energy();
+	pho_h2oe_bc[pho_n] = hcalHelper->hcalESumDepth2BehindClusters(caloTwId)/localPho->superCluster()->energy();
+	pho_hoe_bc[pho_n]  = pho_h1oe_bc[pho_n] + pho_h2oe_bc[pho_n];
+      }
+    }
+
     pho_r1x5[pho_n] = localPho->r1x5();
     pho_r2x5[pho_n] = localPho->r2x5();
     pho_r9[pho_n] = localPho->r9();
@@ -778,15 +796,15 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     iEvent.getByLabel(ecalHitEBColl, EBReducedRecHits);
     iEvent.getByLabel(ecalHitEEColl, EEReducedRecHits);
 
-    ggPFPhotons ggPFPhoton(*localPho, phoHpf,hElectrons,
-			   pfCollection,
-			   EBReducedRecHits,
-			   EEReducedRecHits,
-			   ESRecHits,
-			   geomBar_,
-			   geomEnd_,
-			   bsHandle
-			   );
+    //ggPFPhotons ggPFPhoton(*localPho, phoHpf,hElectrons,
+    //			   pfCollection,
+    //			   EBReducedRecHits,
+    //			   EEReducedRecHits,
+    //			   ESRecHits,
+    //			   geomBar_,
+    //			   geomEnd_,
+    //			   bsHandle
+    //  			   );
     
     pho_pfconvVtxZ[pho_n] = -9999.;
     pho_pfconvVtxZErr[pho_n] = -9999.;
@@ -814,100 +832,100 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_pfRawEnergy[pho_n] = 0;
     
     EcalClusterLazyTools pflazyTool(iEvent, iSetup, ecalHitEBColl, ecalHitEEColl);
-    
-    if(ggPFPhoton.MatchPFReco()){
-      std::pair<float, float>VertexZ=ggPFPhoton.SLPoint();
-      pho_pfconvVtxZ[pho_n] = VertexZ.first;
-      pho_pfconvVtxZErr[pho_n] = VertexZ.second;
-      pho_pfMatch[pho_n]=1;
-      //check Ele Veto (Conv Safe):
-      if(ggPFPhoton.PFElectronVeto(hConversions, hElectrons))pho_PfEleVeto[pho_n]=1;
-      else pho_PfEleVeto[pho_n]=0;
-      if(ggPFPhoton.isConv()){
-    	pho_hasConvPf[pho_n] = 1;
-      }
-      else pho_hasConvPf[pho_n] = 0;
-      
-      if(ggPFPhoton.hasSLConv()){
-    	pho_hasSLConvPf[pho_n] = 1;
-      }
-      else pho_hasSLConvPf[pho_n] = 0;
-      
-      ggPFPhoton.fillPFClusters();
-      pho_pfpresh1[pho_n] = ggPFPhoton.PFPS1();
-      pho_pfpresh2[pho_n] = ggPFPhoton.PFPS2();
-      pho_must[pho_n] = ggPFPhoton.MustEtOut();
-      pho_mustenergy[pho_n] = ggPFPhoton.MustE();
-      pho_mustenergyout[pho_n] = ggPFPhoton.MustEOut();
-      pho_mustEtout[pho_n]=ggPFPhoton.MustEtOut();
-      pho_pflowE[pho_n] = ggPFPhoton.PFLowE();
-      pho_pfdeta[pho_n] = ggPFPhoton.PFdEta();
-      pho_pfdphi[pho_n] = ggPFPhoton.PFdPhi();
-      pho_pfclusrms[pho_n] = ggPFPhoton.PFClusRMSTot();
-      pho_pfclusrmsmust[pho_n] = ggPFPhoton.PFClusRMSMust();
-      std::vector<reco::CaloCluster>PFC=ggPFPhoton.PFClusters();
-      pho_pfClusECorr[pho_n]=ggPFPhoton.getPFPhoECorr(PFC, PFLCBarrel, PFLCEndcap);
-    
-      double PFCseedE = 0;
-      int ipfseed = -1;
-      for (unsigned int i=0; i<PFC.size(); i++){
-    	pho_pfRawEnergy[pho_n] += PFC[i].energy();
-    	if (PFC[i].energy()>PFCseedE){
-    	  PFCseedE = PFC[i].energy();
-    	  ipfseed = i;
-    	}
-      }
-      if (ipfseed!=-1){
-    	std::vector<float> pfviCov = pflazyTool.localCovariances(PFC[ipfseed]);
-    	pho_pfsieie[pho_n] = pfviCov[0];
-    	pho_pfsieip[pho_n] = pfviCov[1];
-    	pho_pfsipip[pho_n] = pfviCov[2];
-    	pho_pfe2x2[pho_n] = pflazyTool.e2x2(PFC[ipfseed]);
-    	pho_pfe3x3[pho_n] = pflazyTool.e3x3(PFC[ipfseed]);
-    	pho_pfe5x5[pho_n] = pflazyTool.e5x5(PFC[ipfseed]);
-    	pho_pfemaxxtal[pho_n] = pflazyTool.eMax(PFC[ipfseed]);
-    	pho_pfe2nd[pho_n] = pflazyTool.e2nd(PFC[ipfseed]);
-    	
-      } 
-    }
-    else{
-      ggPFPhoton.recoPhotonClusterLink(*localPho, pfCollection);
-      pho_pfMatch[pho_n]=0;
-      pho_pfpresh1[pho_n] = ggPFPhoton.PFPS1();
-      pho_pfpresh2[pho_n] = ggPFPhoton.PFPS2();
-      pho_must[pho_n] = ggPFPhoton.MustEtOut();
-      pho_mustenergy[pho_n] = ggPFPhoton.MustE();
-      pho_mustenergyout[pho_n] = ggPFPhoton.MustEOut();
-      pho_mustEtout[pho_n]=ggPFPhoton.MustEtOut();
-      pho_pflowE[pho_n] = ggPFPhoton.PFLowE();
-      pho_pfdeta[pho_n] = ggPFPhoton.PFdEta();
-      pho_pfdphi[pho_n] = ggPFPhoton.PFdPhi();
-      pho_pfclusrms[pho_n] = ggPFPhoton.PFClusRMSTot();
-      pho_pfclusrmsmust[pho_n] = ggPFPhoton.PFClusRMSMust();
-    
-      ggPFClusters ClusterColl(EBReducedRecHits, EEReducedRecHits, geomBar_, geomEnd_);
-      std::vector<reco::CaloCluster>PFC=ClusterColl.getPFClusters(*localPho->superCluster());
-      double PFCseedE = 0;
-      int ipfseed = -1;
-      for (unsigned int i=0; i<PFC.size(); i++){
-    	pho_pfRawEnergy[pho_n] += PFC[i].energy();
-    	if (PFC[i].energy()>PFCseedE){
-    	  PFCseedE = PFC[i].energy();
-    	  ipfseed = i;
-    	}
-      }
-      if (ipfseed!=-1){
-    	std::vector<float> pfviCov = pflazyTool.localCovariances(PFC[ipfseed]);
-    	pho_pfsieie[pho_n] = pfviCov[0];
-    	pho_pfsieip[pho_n] = pfviCov[1];
-    	pho_pfsipip[pho_n] = pfviCov[2];
-    	pho_pfe2x2[pho_n] = pflazyTool.e2x2(PFC[ipfseed]);
-    	pho_pfe3x3[pho_n] = pflazyTool.e3x3(PFC[ipfseed]);
-    	pho_pfe5x5[pho_n] = pflazyTool.e5x5(PFC[ipfseed]);
-    	pho_pfemaxxtal[pho_n] = pflazyTool.eMax(PFC[ipfseed]);
-    	pho_pfe2nd[pho_n] = pflazyTool.e2nd(PFC[ipfseed]);	
-      } 
-    }
+
+    //if(ggPFPhoton.MatchPFReco()){
+    //  std::pair<float, float>VertexZ=ggPFPhoton.SLPoint();
+    //  pho_pfconvVtxZ[pho_n] = VertexZ.first;
+    //  pho_pfconvVtxZErr[pho_n] = VertexZ.second;
+    //  pho_pfMatch[pho_n]=1;
+    //  //check Ele Veto (Conv Safe):
+    //  if(ggPFPhoton.PFElectronVeto(hConversions, hElectrons))pho_PfEleVeto[pho_n]=1;
+    //  else pho_PfEleVeto[pho_n]=0;
+    //  if(ggPFPhoton.isConv()){
+    //	pho_hasConvPf[pho_n] = 1;
+    //  }
+    //  else pho_hasConvPf[pho_n] = 0;
+    //  
+    //  if(ggPFPhoton.hasSLConv()){
+    //	pho_hasSLConvPf[pho_n] = 1;
+    //  }
+    //  else pho_hasSLConvPf[pho_n] = 0;
+    //  
+    //  ggPFPhoton.fillPFClusters();
+    //  pho_pfpresh1[pho_n] = ggPFPhoton.PFPS1();
+    //  pho_pfpresh2[pho_n] = ggPFPhoton.PFPS2();
+    //  pho_must[pho_n] = ggPFPhoton.MustEtOut();
+    //  pho_mustenergy[pho_n] = ggPFPhoton.MustE();
+    //  pho_mustenergyout[pho_n] = ggPFPhoton.MustEOut();
+    //  pho_mustEtout[pho_n]=ggPFPhoton.MustEtOut();
+    //  pho_pflowE[pho_n] = ggPFPhoton.PFLowE();
+    //  pho_pfdeta[pho_n] = ggPFPhoton.PFdEta();
+    //  pho_pfdphi[pho_n] = ggPFPhoton.PFdPhi();
+    //  pho_pfclusrms[pho_n] = ggPFPhoton.PFClusRMSTot();
+    //  pho_pfclusrmsmust[pho_n] = ggPFPhoton.PFClusRMSMust();
+    //  std::vector<reco::CaloCluster>PFC=ggPFPhoton.PFClusters();
+    //  pho_pfClusECorr[pho_n]=ggPFPhoton.getPFPhoECorr(PFC, PFLCBarrel, PFLCEndcap);
+    //
+    //  double PFCseedE = 0;
+    //  int ipfseed = -1;
+    //  for (unsigned int i=0; i<PFC.size(); i++){
+    //	pho_pfRawEnergy[pho_n] += PFC[i].energy();
+    //	if (PFC[i].energy()>PFCseedE){
+    //	  PFCseedE = PFC[i].energy();
+    //	  ipfseed = i;
+    //	}
+    //  }
+    //  if (ipfseed!=-1){
+    //	std::vector<float> pfviCov = pflazyTool.localCovariances(PFC[ipfseed]);
+    //	pho_pfsieie[pho_n] = pfviCov[0];
+    //	pho_pfsieip[pho_n] = pfviCov[1];
+    //	pho_pfsipip[pho_n] = pfviCov[2];
+    //	pho_pfe2x2[pho_n] = pflazyTool.e2x2(PFC[ipfseed]);
+    //	pho_pfe3x3[pho_n] = pflazyTool.e3x3(PFC[ipfseed]);
+    //	pho_pfe5x5[pho_n] = pflazyTool.e5x5(PFC[ipfseed]);
+    //	pho_pfemaxxtal[pho_n] = pflazyTool.eMax(PFC[ipfseed]);
+    //	pho_pfe2nd[pho_n] = pflazyTool.e2nd(PFC[ipfseed]);
+    //	
+    //  } 
+    //}
+    //else{
+    //  ggPFPhoton.recoPhotonClusterLink(*localPho, pfCollection);
+    //  pho_pfMatch[pho_n]=0;
+    //  pho_pfpresh1[pho_n] = ggPFPhoton.PFPS1();
+    //  pho_pfpresh2[pho_n] = ggPFPhoton.PFPS2();
+    //  pho_must[pho_n] = ggPFPhoton.MustEtOut();
+    //  pho_mustenergy[pho_n] = ggPFPhoton.MustE();
+    //  pho_mustenergyout[pho_n] = ggPFPhoton.MustEOut();
+    //  pho_mustEtout[pho_n]=ggPFPhoton.MustEtOut();
+    //  pho_pflowE[pho_n] = ggPFPhoton.PFLowE();
+    //  pho_pfdeta[pho_n] = ggPFPhoton.PFdEta();
+    //  pho_pfdphi[pho_n] = ggPFPhoton.PFdPhi();
+    //  pho_pfclusrms[pho_n] = ggPFPhoton.PFClusRMSTot();
+    //  pho_pfclusrmsmust[pho_n] = ggPFPhoton.PFClusRMSMust();
+    //
+    //  ggPFClusters ClusterColl(EBReducedRecHits, EEReducedRecHits, geomBar_, geomEnd_);
+    //  std::vector<reco::CaloCluster>PFC=ClusterColl.getPFClusters(*localPho->superCluster());
+    //  double PFCseedE = 0;
+    //  int ipfseed = -1;
+    //  for (unsigned int i=0; i<PFC.size(); i++){
+    //	pho_pfRawEnergy[pho_n] += PFC[i].energy();
+    //	if (PFC[i].energy()>PFCseedE){
+    //	  PFCseedE = PFC[i].energy();
+    //	  ipfseed = i;
+    //	}
+    //  }
+    //  if (ipfseed!=-1){
+    //	std::vector<float> pfviCov = pflazyTool.localCovariances(PFC[ipfseed]);
+    //	pho_pfsieie[pho_n] = pfviCov[0];
+    //	pho_pfsieip[pho_n] = pfviCov[1];
+    //	pho_pfsipip[pho_n] = pfviCov[2];
+    //	pho_pfe2x2[pho_n] = pflazyTool.e2x2(PFC[ipfseed]);
+    //	pho_pfe3x3[pho_n] = pflazyTool.e3x3(PFC[ipfseed]);
+    //	pho_pfe5x5[pho_n] = pflazyTool.e5x5(PFC[ipfseed]);
+    //	pho_pfemaxxtal[pho_n] = pflazyTool.eMax(PFC[ipfseed]);
+    //	pho_pfe2nd[pho_n] = pflazyTool.e2nd(PFC[ipfseed]);	
+    //  } 
+    //}
 
     // more cluster shapes from Lazy Tools
     std::vector<float> viCov;

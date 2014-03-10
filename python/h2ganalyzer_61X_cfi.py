@@ -1,4 +1,4 @@
-
+s
 import FWCore.ParameterSet.Config as cms
 
 
@@ -20,7 +20,7 @@ h2ganalyzer = cms.EDAnalyzer(
     "GlobeAnalyzer",
     RootFileName = cms.string('prova.root'),
     JobMaker = cms.string('jobmaker unknown'),
-    h2gAnalyzerVersion = cms.string("V15_00_08"),
+    h2gAnalyzerVersion = cms.string("V17_00_00"),
     
     energyCorrectionsFromDB = cms.bool(False),
     energyCorrectionsFileNamePho = cms.string("gbrv3ph_52x.root"),
@@ -44,7 +44,11 @@ h2ganalyzer = cms.EDAnalyzer(
     pileupInfoCollection = cms.InputTag("addPileupInfo"),
     
     GenJetColl_algo1 = cms.InputTag("ak5GenJets"),
+<<<<<<< HEAD
     GenJetColl_algo2 = cms.InputTag("ak7GenJets"),
+=======
+    GenJetColl_algo2 = cms.InputTag("ak8GenJets"),
+>>>>>>> development
     GenJetColl_algo3 = cms.InputTag("kt4GenJets"),
 
     GenCaloMETColl = cms.InputTag("genMetCalo"),
@@ -111,6 +115,7 @@ h2ganalyzer = cms.EDAnalyzer(
     TrackColl3 = cms.InputTag("electronGsfTracks"),
     AssocLabel = cms.string('TrackAssociatorByHits'),
     
+<<<<<<< HEAD
     ElectronColl_std = cms.InputTag("gsfElectrons"),        
     eIDLabels        = cms.VInputTag(cms.InputTag("eidLoose"),
                                      cms.InputTag("eidTight")),
@@ -129,6 +134,26 @@ h2ganalyzer = cms.EDAnalyzer(
                                                   "EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat4.weights.xml",
                                                   "EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat5.weights.xml",
                                                   "EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat6.weights.xml"),
+=======
+    ElectronColl  = cms.InputTag("gsfElectrons"),        
+    eIDLabels     = cms.VInputTag(cms.InputTag("eidLoose"),
+                                  cms.InputTag("eidTight")),
+    #electronMVAWeightFileName =  cms.FileInPath("RecoEgamma/ElectronIdentification/data/TMVA_BDTSimpleCat_17Feb2011.weights.xml"),
+
+    electronNonTrigMVAWeightFileNames = cms.vstring("EgammaAnalysis/ElectronTools/data/Electrons_BDTG_NonTrigV0_Cat1.weights.xml",
+                                                    "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_NonTrigV0_Cat2.weights.xml",
+                                                    "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_NonTrigV0_Cat3.weights.xml",
+                                                    "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_NonTrigV0_Cat4.weights.xml",
+                                                    "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_NonTrigV0_Cat5.weights.xml",
+                                                    "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_NonTrigV0_Cat6.weights.xml"),
+    
+    electronTrigMVAWeightFileNames =  cms.vstring("EgammaAnalysis/ElectronTools/data/Electrons_BDTG_TrigV0_Cat1.weights.xml",
+                                                  "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_TrigV0_Cat2.weights.xml",
+                                                  "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_TrigV0_Cat3.weights.xml",
+                                                  "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_TrigV0_Cat4.weights.xml",
+                                                  "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_TrigV0_Cat5.weights.xml",
+                                                  "EgammaAnalysis/ElectronTools/data/Electrons_BDTG_TrigV0_Cat6.weights.xml"),
+>>>>>>> development
     
     IsoValElectronPF = cms.VInputTag(cms.InputTag('elPFIsoValueCharged03PFIdPFIso'),
                                      cms.InputTag('elPFIsoValueGamma03PFIdPFIso'),
@@ -173,7 +198,11 @@ h2ganalyzer = cms.EDAnalyzer(
     JetTrackAssociationColl_algo3 = cms.InputTag(""),
     
     rhoCollection_algo1 = cms.InputTag("kt6PFJets","rho"),
+<<<<<<< HEAD
     rhoCollection_algo2 = cms.InputTag("kt6CaloJets","rho"),
+=======
+    rhoCollection_algo2 = cms.InputTag("ak5PFJets","rho"),
+>>>>>>> development
     rhoCollection_algo3 = cms.InputTag("kt6CaloJetsCentral","rho"),
 
     PFCandidateColl = cms.InputTag("particleFlow"),
@@ -209,6 +238,7 @@ h2ganalyzer = cms.EDAnalyzer(
     HLTParameters = cms.PSet(
     useSecondaryTrigger = cms.bool(False),
     PrimaryTriggerResultsTag   = cms.InputTag("TriggerResults"      ,"","HLT"),
+<<<<<<< HEAD
     TriggerResultsTag          = cms.InputTag("hltTriggerSummaryAOD","","HLT")
     ),
     # Use this in case 2 different HLTs are stored, like 8e29 and 1e31
@@ -216,6 +246,27 @@ h2ganalyzer = cms.EDAnalyzer(
     # PrimaryTriggerResultsTag   = cms.InputTag("TriggerResults"      ,"","HLT8E29"),
     # SecondaryTriggerResultsTag = cms.InputTag("TriggerResults"      ,"","HLT"    ),
     # TriggerResultsTag          = cms.InputTag("hltTriggerSummaryAOD","","HLT8E29")),
+=======
+    TriggerResultsTag          = cms.InputTag("hltTriggerSummaryAOD","","HLT"),
+    TriggerFilters             = cms.vstring(
+    "hltEG26CaloId10Iso50HcalIsoLastFilter",
+    "hltEG26R9Id85LastFilter",
+    "hltEG18R9Id85LastFilterUnseeded",
+    "hltEG18CaloId10Iso50TrackIsoLastFilterUnseeded",
+    "hltEG36CaloId10Iso50HcalIsoLastFilter",
+    "hltEG36R9Id85LastFilter",
+    "hltEG22R9Id85LastFilterUnseeded",
+    "hltEG22CaloId10Iso50TrackIsoLastFilterUnseeded",
+    "hltEle32CaloIdTCaloIsoTTrkIdTTrkIsoTSC17PMMassFilter",
+    "hltEle32CaloIdTCaloIsoTTrkIdTTrkIsoTSC17TrackIsoFilter",
+    "hltEG10R9Id85LastFilterUnseeded",
+    "hltEG10CaloId10Iso50TrackIsoLastFilterUnseeded",
+    "hltEle17TightIdLooseIsoEle8TightIdLooseIsoTrackIsoFilter",
+    "hltEle17TightIdLooseIsoEle8TightIdLooseIsoTrackIsoDoubleFilter",
+    "hltEle17CaloIdVTCaloIsoVTTrkIdTTrkIsoVTEle8PMMassFilter",
+    "hltEle17CaloIdVTCaloIsoVTTrkIdTTrkIsoVTEle8TrackIsoFilter")
+    ),
+>>>>>>> development
     
     # CUTS
     hggPhotonIDConfiguration = cms.PSet(hggPhotonIDCuts),
@@ -238,8 +289,13 @@ h2ganalyzer = cms.EDAnalyzer(
                             HcalMaxDR = cms.double(0.6),
                             KeepOutsideCone = cms.bool(False)),
     
+<<<<<<< HEAD
     BasicClusterCuts = cms.PSet(EnergyCut = cms.double(-1.0)),
     SuperClusterCuts = cms.PSet(EnergyCut = cms.double(-1.0)),
+=======
+    BasicClusterCuts = cms.PSet(EtCut = cms.double(1.0)),
+    SuperClusterCuts = cms.PSet(EtCut = cms.double(-1.0)),
+>>>>>>> development
     CaloTowerCuts = cms.PSet(EtCut = cms.double(1.0)),
     
     TrackCuts = cms.PSet(PtCut = cms.double(-1.0)),
@@ -305,8 +361,13 @@ h2ganalyzer = cms.EDAnalyzer(
     doGenVertices = cms.bool(True),
     
     doGenJet_algo1 = cms.bool(True),
+<<<<<<< HEAD
     doGenJet_algo2 = cms.bool(True),
     doGenJet_algo3 = cms.bool(True),
+=======
+    doGenJet_algo2 = cms.bool(False),
+    doGenJet_algo3 = cms.bool(False),
+>>>>>>> development
 
     doGenMet = cms.bool(True),
     
@@ -333,6 +394,7 @@ h2ganalyzer = cms.EDAnalyzer(
     doGsfTracks = cms.bool(True),
 
     doVertices_std = cms.bool(True),
+<<<<<<< HEAD
     doVertices_nobs = cms.bool(True),
     
     doElectron_std = cms.bool(True),
@@ -340,6 +402,15 @@ h2ganalyzer = cms.EDAnalyzer(
     doPhoton = cms.bool(True),
     doAllConversions = cms.bool(True),
     doLeptons = cms.bool(True),
+=======
+    doVertices_nobs = cms.bool(False),
+    
+    doElectron = cms.bool(True),
+    doMuon = cms.bool(True),
+    doPhoton = cms.bool(True),
+    doAllConversions = cms.bool(True),
+    doLeptons = cms.bool(False),
+>>>>>>> development
     
     doJet_algo1 = cms.bool(False),
     doJet_algo2 = cms.bool(False),
@@ -354,7 +425,11 @@ h2ganalyzer = cms.EDAnalyzer(
     doMet = cms.bool(True),
     dotcMet = cms.bool(True),
     doPFMet = cms.bool(True),
+<<<<<<< HEAD
     doHt = cms.bool(True),
+=======
+    doHt = cms.bool(False),
+>>>>>>> development
     
     doRho = cms.bool(True),
     doPileup = cms.bool(True),
