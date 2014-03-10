@@ -79,6 +79,7 @@ public:
   void readConfiguration(const edm::ParameterSet& iConfig);
   void defineBranch();
   void fillTree();
+  int findModule(std::string type, std::string prefix="");
 
   template <class T> void Branch(const char* name, T* address, const char* leaflist, Int_t bufsize = 32000) {
     for (unsigned int i=0; i<branchesToSkim.size(); i++) {
@@ -102,40 +103,41 @@ public:
      tree->Branch(name, classname, obj, bufsize, splitlevel);
   }
 
+  std::vector<GlobeBase*> container;
 
-  GlobeCommon* common;
-  GlobePhotons* photons;
-  GlobeConversions* allConversions;
-  GlobePFCandidates* pfCandidates;
-  GlobeEcalClusters* ecalclusters;
-  GlobeMET* met, *tcmet, *pfmet; 
-  GlobeCaloTowers* calotowers;
-  GlobeHcal* hcalhits;
-  GlobeL1* level1;
-  GlobeVertex* vertex_std;
-  GlobeVertex* vertex_nobs;
-  GlobeSimHits* simhits;
-  GlobeSimTracks* simtracks;
-  GlobeTracks* tracks;
-  GlobeGsfTracks* gsfTracks;
-  GlobeTrackingParticles* trackingParticles;
-  GlobeElectrons* electrons; //, *gge_electrons;
-  GlobeMuons* global_muons, *tk_muons, *sta_muons, *muons;
-  GlobeJets* algo1_jets, *algo2_jets, *algo3_jets, *algoPF1_jets, *algoPF2_jets, *algoPF3_jets ;
-  GlobeGenerator* gen;
-  GlobeGenParticles* genP;
-  GlobeGenVertices* genV;
-  GlobeGenJets* algo1_genJets, *algo2_genJets, *algo3_genJets;
-  GlobeEcalHits* ecalrechits;
-  GlobeHLT* hlt;
-  GlobeSelector* selector;
-  GlobeLeptons* leptons;
-  GlobeHT* ht;
-  //GlobePAT* pat;
-  GlobeReducedGen* reducedgen;
-  GlobeRho* rho1, *rho2, *rho3;
-  GlobePileup* pileup;
-  GlobePdfWeights* pdfweights;
+  //GlobeCommon* common;
+  //GlobePhotons* photons;
+  //GlobeConversions* allConversions;
+  //GlobePFCandidates* pfCandidates;
+  //GlobeEcalClusters* ecalclusters;
+  //GlobeMET* met, *tcmet, *pfmet; 
+  //GlobeCaloTowers* calotowers;
+  //GlobeHcal* hcalhits;
+  //GlobeL1* level1;
+  //GlobeVertex* vertex_std;
+  //GlobeVertex* vertex_nobs;
+  //GlobeSimHits* simhits;
+  //GlobeSimTracks* simtracks;
+  //GlobeTracks* tracks;
+  //GlobeGsfTracks* gsfTracks;
+  //GlobeTrackingParticles* trackingParticles;
+  //GlobeElectrons* std_electrons; //, *gge_electrons;
+  //GlobeMuons* global_muons, *tk_muons, *sta_muons, *muons;
+  //GlobeJets* algo1_jets, *algo2_jets, *algo3_jets, *algoPF1_jets, *algoPF2_jets, *algoPF3_jets ;
+  //GlobeGenerator* gen;
+  //GlobeGenParticles* genP;
+  //GlobeGenVertices* genV;
+  //GlobeGenJets* algo1_genJets, *algo2_genJets, *algo3_genJets;
+  //GlobeEcalHits* ecalrechits;
+  //GlobeHLT* hlt;
+  //GlobeSelector* selector;
+  //GlobeLeptons* leptons;
+  //GlobeHT* ht;
+  ////GlobePAT* pat;
+  //GlobeReducedGen* reducedgen;
+  //GlobeRho* rho1, *rho2, *rho3;
+  //GlobePileup* pileup;
+  //GlobePdfWeights* pdfweights;
 
 private:
   void beginJob();
@@ -148,7 +150,6 @@ private:
   TFile *file;
   TTree *tree, *tree2, *lumitree;
 
-  //std::vector<std::string> a, b;
   std::vector<std::string> *parameters;
   std::vector<std::string> *hlt_path_names, *reduced_path;
   std::vector<int>* reduced_index;

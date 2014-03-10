@@ -3,6 +3,8 @@
 #ifndef GLOBEELECTRONS_H
 #define GLOBEELECTRONS_H
 
+#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeBase.h"
+
 #include "FWCore/Framework/interface/Event.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -38,19 +40,15 @@
 class GlobeAnalyzer;
 class ElectronMVAEstimator;
 
-class GlobeElectrons {
+class GlobeElectrons : public GlobeBase {
  public:
   typedef std::vector< edm::Handle< edm::ValueMap<double> > > IsoDepositVals;
-
+  
   GlobeElectrons(const edm::ParameterSet&, const char* n = "std");
-  virtual ~GlobeElectrons();
+  ~GlobeElectrons();
 
   void defineBranch(GlobeAnalyzer* ana);
   bool analyze(const edm::Event&, const edm::EventSetup&);
-  bool analyze_pf(const edm::Event&, const edm::EventSetup&);
-  void initialize_branches(int electron_number);
-  float hoeCalculator(const reco::BasicCluster*, const CaloGeometry&,
-                      const edm::Event&, const edm::EventSetup&);
   std::map<DetId, EcalRecHit> rechits_map_;
 
   EGammaMvaEleEstimator* myMVANonTrig;
@@ -58,10 +56,6 @@ class GlobeElectrons {
   std::vector<std::string> myManualCatWeightsNonTrig;
   std::vector<std::string> myManualCatWeightsTrig;
   edm::ESHandle<TransientTrackBuilder> trackBuilder_;
-
-  //bool identify(const reco::GsfElectronRef electron, int type);
-  //bool st_identify(const reco::GsfElectronRef electron, int type);
-  //int classify(const reco::GsfElectronRef electron);
 
   std::pair<unsigned int, float> sharedHits(const reco::Track& trackA, const reco::Track& trackB);
 
@@ -193,22 +187,6 @@ class GlobeElectrons {
   Float_t el_DZVtx[MAX_ELECTRONS][100];
   Float_t el_conv_vtxProb[MAX_ELECTRONS];
 
-  /** corresponds to the el_XXX_catbased variable in the output tree.
-
-      - first index is the electron index
-      - second index corresponds to the eID label (type of electron id)
-        as specified in the eIDLabels parameter of GlobeAnalyzer
-        (e.g. eidLoose, eidTight)
-      - the value is a bit pattern, typically 
-
-           0 - no cut passed
-           1 - eID cuts passed
-           2 - iso cuts passed
-           4 - conversion rejection
-           8 - ip cut 
-       
-      See also https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideCategoryBasedElectronID#How_to_use_it_in_CMSSW
-  */ 
   std::vector<std::vector<int> >* el_catbased;
   std::vector<std::vector<UInt_t> >* el_schits;
   std::vector<std::vector<UInt_t> >* el_bchits;
