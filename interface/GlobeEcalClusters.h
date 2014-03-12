@@ -64,13 +64,12 @@ public:
   //----------------------------------------
 protected:
   /** handles to superclusters */
-  edm::Handle<reco::SuperClusterCollection> superClustersHybridH; 
-  edm::Handle<reco::SuperClusterCollection> superClustersEndcapH; 
+  edm::Handle<reco::SuperClusterCollection> barrelSuperClustersH; 
+  edm::Handle<reco::SuperClusterCollection> endcapSuperClustersH; 
 
   /** handles to basic clusters */
-  edm::Handle<reco::BasicClusterCollection> hybridClustersBarrelH; 
-  edm::Handle<reco::BasicClusterCollection> basicClustersEndcapH; 
-  edm::Handle<reco::BasicClusterCollection> basicClustersBarrelH;
+  edm::Handle<reco::BasicClusterCollection> barrelClustersH; 
+  edm::Handle<reco::BasicClusterCollection> endcapClustersH;
 
 
   /** rechits of the current event (initialized in analyze(..)) */
@@ -137,17 +136,12 @@ public:
   GlobeCuts *gCUT;
   
   // SUPER CLUSTERS
-  edm::InputTag hybridSuperClusterColl; 
   edm::InputTag barrelSuperClusterColl; 
   edm::InputTag endcapSuperClusterColl; 
 
   // BASIC CLUSTERS
-  edm::InputTag barrelHybridClusterColl; 
   edm::InputTag barrelBasicClusterColl; 
   edm::InputTag endcapBasicClusterColl; 
-  edm::InputTag barrelHybridClusterShapeColl; 
-  edm::InputTag barrelBasicClusterShapeColl; 
-  edm::InputTag endcapBasicClusterShapeColl; 
   edm::InputTag ecalHitEBColl;
   edm::InputTag ecalHitEEColl;
 

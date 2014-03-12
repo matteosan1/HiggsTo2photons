@@ -91,17 +91,11 @@ h2ganalyzer = cms.EDAnalyzer(
     HcalHitsHoColl = cms.InputTag("reducedHcalRecHits", "horeco"),
     
     CaloTowerColl = cms.InputTag("towerMaker"),
-    
-    BarrelBasicClusterColl = cms.InputTag("",""),
+   
+    BarrelBasicClusterColl = cms.InputTag("particleFlowEGamma","EBEEClusters"),
     EndcapBasicClusterColl = cms.InputTag("multi5x5SuperClusters","multi5x5EndcapBasicClusters"),    
-    #EndcapBasicClusterColl = cms.InputTag("multi5x5BasicClusters","multi5x5EndcapBasicClusters"),    
-    BarrelBasicClusterShapeColl = cms.InputTag("",""),
-    BarrelHybridClusterShapeColl = cms.InputTag("hybridSuperClusters","hybridShapeAssoc"),
-    EndcapBasicClusterShapeColl = cms.InputTag("multi5x5SuperClusters","multi5x5EndcapShapeAssoc"),
-    BarrelSuperClusterColl = cms.InputTag("multi5x5SuperClusters","multi5x5BarrelSuperClusters"),
-    BarrelHybridClusterColl = cms.InputTag("hybridSuperClusters","hybridBarrelBasicClusters"),
-    EndcapSuperClusterColl = cms.InputTag("correctedMulti5x5SuperClustersWithPreshower"),
-    HybridSuperClusterColl = cms.InputTag("correctedHybridSuperClusters"),
+    BarrelSuperClusterColl = cms.InputTag ("particleFlowEGamma"),
+    EndcapSuperClusterColl = cms.InputTag ("particleFlowSuperClusterECAL","particleFlowSuperClusterECALEndcapWithPreshower"),
     
     TrackColl = cms.InputTag("generalTracks"),
     GsfTrackColl = cms.InputTag("electronGsfTracks"),

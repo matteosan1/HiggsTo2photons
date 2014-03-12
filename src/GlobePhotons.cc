@@ -70,7 +70,7 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, std::string n) {
   photonCollStd =  iConfig.getParameter<edm::InputTag>("PhotonCollStd");
   photonCollPf =  iConfig.getParameter<edm::InputTag>("PhotonCollPf");
   // SUPER CLUSTERS
-  hybridSuperClusterColl = iConfig.getParameter<edm::InputTag>("HybridSuperClusterColl");
+  hybridSuperClusterColl = iConfig.getParameter<edm::InputTag>("BarrelSuperClusterColl");
   endcapSuperClusterColl = iConfig.getParameter<edm::InputTag>("EndcapSuperClusterColl");
 
   ecalHitEBColl = iConfig.getParameter<edm::InputTag>("EcalHitEBColl");
@@ -490,12 +490,6 @@ void GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   edm::Handle<reco::SuperClusterCollection> superClustersHybridH; 
   edm::Handle<reco::SuperClusterCollection> superClustersEndcapH; 
-  edm::Handle<reco::BasicClusterShapeAssociationCollection> hybridClusterShapeBarrelH; 
-  edm::Handle<reco::BasicClusterShapeAssociationCollection> basicClusterShapeEndcapH; 
-
-  iEvent.getByLabel(barrelHybridClusterShapeColl, hybridClusterShapeBarrelH);
-  iEvent.getByLabel(endcapBasicClusterShapeColl, basicClusterShapeEndcapH);
-
   iEvent.getByLabel(hybridSuperClusterColl, superClustersHybridH);
   iEvent.getByLabel(endcapSuperClusterColl, superClustersEndcapH);
 

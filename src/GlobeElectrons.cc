@@ -57,7 +57,7 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig, const char* n):
   //pfColl = iConfig.getParameter<edm::InputTag>("PFCandidateColl");
   rhoCollection = iConfig.getParameter<edm::InputTag>("rhoCollection_algo1");
 
-  hybridSuperClusterColl = iConfig.getParameter<edm::InputTag>("HybridSuperClusterColl");
+  hybridSuperClusterColl = iConfig.getParameter<edm::InputTag>("BarrelSuperClusterColl");
   endcapSuperClusterColl = iConfig.getParameter<edm::InputTag>("EndcapSuperClusterColl");
   ecalHitEBColl = iConfig.getParameter<edm::InputTag>("EcalHitEBColl");
   ecalHitEEColl = iConfig.getParameter<edm::InputTag>("EcalHitEEColl");

@@ -32,11 +32,10 @@ GlobeEcalClusters::GlobeEcalClusters(const edm::ParameterSet& iConfig, const cha
   edm::ParameterSet psetBC = iConfig.getParameter<edm::ParameterSet>("BasicClusterCuts");
   
   //super clusters
-  hybridSuperClusterColl = iConfig.getParameter<edm::InputTag>("HybridSuperClusterColl");
+  barrelSuperClusterColl = iConfig.getParameter<edm::InputTag>("BarrelSuperClusterColl");
   endcapSuperClusterColl = iConfig.getParameter<edm::InputTag>("EndcapSuperClusterColl");
   
   //basic clusters
-  barrelHybridClusterColl = iConfig.getParameter<edm::InputTag>("BarrelHybridClusterColl");
   barrelBasicClusterColl = iConfig.getParameter<edm::InputTag>("BarrelBasicClusterColl");
   endcapBasicClusterColl = iConfig.getParameter<edm::InputTag>("EndcapBasicClusterColl");
   ecalHitEBColl = iConfig.getParameter<edm::InputTag>("EcalHitEBColl");
@@ -122,25 +121,15 @@ bool GlobeEcalClusters::analyze(const edm::Event& iEvent, const edm::EventSetup&
   topology = theCaloTopo.product();
  
   // get collections
-  iEvent.getByLabel(hybridSuperClusterColl,superClustersHybridH);
-  iEvent.getByLabel(endcapSuperClusterColl, superClustersEndcapH);
+  iEvent.getByLabel(barrelSuperClusterColl, barrelSuperClustersH);
+  //iEvent.getByLabel(endcapSuperClusterColl, endcapSuperClustersH);
 
-  //const std::string instan="hybridBarrelBasicClusters";
-  iEvent.getByLabel(barrelHybridClusterColl, hybridClustersBarrelH);
-  if (barrelBasicClusterColl.encode() != "") 
-    iEvent.getByLabel(barrelBasicClusterColl, basicClustersBarrelH);
-
-  iEvent.getByLabel(endcapBasicClusterColl, basicClustersEndcapH);
+  iEvent.getByLabel(barrelBasicClusterColl, barrelClustersH);
+  //iEvent.getByLabel(endcapBasicClusterColl, endcapClustersH);
 
   CrackCorrFunc->init(iSetup);
   LocalCorrFunc->init(iSetup);
-
-  if (debug_level > 9) {
-    std::cout << "GlobeEcalClusters: superClustersEndcapH->size() "<< superClustersEndcapH->size() << std::endl;
-    std::cout << "GlobeEcalClusters: hybridClustersBarrelH->size() "<< hybridClustersBarrelH->size() << std::endl;
-    std::cout << "GlobeEcalClusters: basicClustersEndcapH->size() "<< basicClustersEndcapH->size() << std::endl;
-  }
-  
+      
   //----------------------------------------    
   // analyze super clusters
   //----------------------------------------  
@@ -154,14 +143,14 @@ bool GlobeEcalClusters::analyze(const edm::Event& iEvent, const edm::EventSetup&
   bc_n = 0;  
   sc_n = 0;
   
-  analyzeSuperClusters(superClustersHybridH, hybridClustersBarrelH, true, 1);
-  analyzeSuperClusters(superClustersEndcapH, basicClustersEndcapH, false, 2);
+  analyzeSuperClusters(barrelSuperClustersH, barrelClustersH, true, 1);
+  //analyzeSuperClusters(endcapSuperClustersH, endcapClustersH, false, 2);
 
   //----------------------------------------  
   // analyze basic clusters 
   //----------------------------------------  
 
-  //analyzeBasicClusters(hybridClustersBarrelH, 1);
+  analyzeBasicClusters(barrelClustersH, 1);
   //analyzeBasicClusters(basicClustersEndcapH, 2);
 
   return true;

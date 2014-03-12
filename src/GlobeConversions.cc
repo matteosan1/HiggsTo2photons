@@ -15,7 +15,7 @@ GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig, const char*
   allConversionsColl =  iConfig.getParameter<edm::InputTag>("ConvertedPhotonColl");
 
   // SUPER CLUSTERS
-  hybridSuperClusterColl = iConfig.getParameter<edm::InputTag>("HybridSuperClusterColl");
+  hybridSuperClusterColl = iConfig.getParameter<edm::InputTag>("BarrelSuperClusterColl");
   endcapSuperClusterColl = iConfig.getParameter<edm::InputTag>("EndcapSuperClusterColl");
 
   // PHOTONS 

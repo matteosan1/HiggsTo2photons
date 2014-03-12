@@ -47,9 +47,10 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 #process.load('Configuration.StandardSequences.Reconstruction_cff')
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 500
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1001))
-process.load("HiggsAnalysis.HiggsTo2photons.CMSSW_RelValDUMMY_cfi")
-#process.source.skipEvents = cms.untracked.uint32(3500)
+#process.load("HiggsAnalysis.HiggsTo2photons.CMSSW_RelValDUMMY_cfi")
+process.load("HiggsAnalysis.HiggsTo2photons.single_cfi")#CMSSW_RelValDUMMY_cfi")
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
+#process.source.skipEvents = cms.untracked.uint32(-1)
 
 hltLabel = "HLT"
 
@@ -288,7 +289,7 @@ elif flagSkimMu == 'ON':
 
 
 process.h2ganalyzer.RootFileName = 'test.root'
-process.h2ganalyzer.Debug_Level = 0
+process.h2ganalyzer.Debug_Level =0
 
 ##---------------------ELECTRON REGRESSION AND SMEARING ------------------------------
 process.load("EgammaAnalysis.ElectronTools.calibratedElectrons_cfi")
