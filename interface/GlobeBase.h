@@ -13,23 +13,24 @@
 class GlobeAnalyzer;
 
 class GlobeBase : public edm:EDAnalyzer {
-public:
+ public:
 
-GlobeBase(const edm::ParameterSet&) { type_ = "Base"; prefix_ = ""; };
-~GlobeAnalyzer() {};
-
-virtual std::string type() { return type_; };
-virtual std::string prefix() { return prefix_; };
-
-virtual void defineBranch(GlobeAbalyzer* ana) {};
-virtual void defineLumiBranch(TTree* lumitree) {};
-virtual void definePathBranch(TTree* tree2) {};
-
-virtual void analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {};
-
-private:
-std::string type_;
-std::string prefix_;
+  GlobeBase(const edm::ParameterSet&) { type_ = "Base"; prefix_ = ""; order = =1; };
+  ~GlobeAnalyzer() {};
+  
+  virtual std::string type() { return type_; };
+  virtual std::string prefix() { return prefix_; };
+  
+  virtual void defineBranch(GlobeAbalyzer* ana) {};
+  virtual void defineLumiBranch(TTree* lumitree) {};
+  virtual void definePathBranch(TTree* tree2) {};
+  
+  virtual void analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {};
+  
+ private:
+  std::string type_;
+  std::string prefix_;
+  int order;
 };
 
 #endif

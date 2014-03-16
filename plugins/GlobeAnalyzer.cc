@@ -1,4 +1,4 @@
-S#include "GlobeAnalyzer.h"
+#include "GlobeAnalyzer.h"
 #include "DataFormats/Common/interface/MergeableCounter.h"
 
 #include "HiggsAnalysis/HiggsTo2photons/interface/Limits.h"
@@ -29,6 +29,39 @@ double diffclock1(clock_t clock1,clock_t clock2) {
   return diffms;
 }
 
+void GlobeAnalyzer::defineMap() {
+
+  map["Electron"] = &createInstance<GlobeElectron>;
+  map["Common"] = &createInstance<GlobeCommon>;	
+  map["Generator"] = &createInstance<GlobeGenerator>;
+  map["GenParticle"] = &createInstance<GlobeGenParticles>;
+  map["GenVertex"] = &createInstance<GlobeGenVertices>;
+  map["SimHit"] = &createInstance<GlobeSimHits>;
+  map["SimTrack"] = &createInstance<GlobeSimTracks>;
+  map["L1"] = &createInstance<GlobeL1>; 
+  map["HLT"] = &createInstance<GlobeHLT>; 
+  map["ECALCluster"] = &createInstance<GlobeEcalClusters>;
+  map["CaloTower"] = &createInstance<GlobeCaloTowers>;
+  map["Track"] = &createInstance<GlobeTracks>;
+  map["GsfTrack"] = &createInstance<GlobeGsfTracks>;
+  map["TrackingParticle"] = &createInstance<GlobeTrackingParticles>;
+  map["Vertex"] = &createInstance<GlobeVertex>;
+  map["Photon"] = &createInstance<GlobePhotons>;
+  map["Conversion"] = &createInstance<GlobeConversions>;
+  map["Muon"] = &createInstance<GlobeMuons>;
+  map["MET"] = &createInstance<GlobeMET>; 
+  map["GenJet"] = &createInstance<GlobeGenJets>;
+  map["Jet"] = &createInstance<GlobeJets>;
+  map["Selector"] = &createInstance<GlobeSelector>;
+  map["ReducedGen"] = &createInstance<GlobeReducedGen>;
+  map["PF"] = &createInstance<GlobePFCandidates>;
+  map["Rho"] = &createInstance<GlobeRho>;
+  map["PU"] = &createInstance<GlobePileup>;
+  map["PdfWeight"] = &createInstance<GlobePdfWeights>;
+  map["ECALHit"] = &createInstance<GlobeEcalHits>; 
+  map["HCALCluster"] = &createInstance<GlobeHcal>;
+}
+
 GlobeAnalyzer::GlobeAnalyzer(const edm::ParameterSet& iConfig) {
 
   fileName = iConfig.getParameter<std::string>("RootFileName");
@@ -41,89 +74,25 @@ GlobeAnalyzer::GlobeAnalyzer(const edm::ParameterSet& iConfig) {
 
   globalCountersNames = iConfig.getParameter<std::vector<std::string> >("globalCounters");
 
-  bool doGenerator=false, doGenParticles=false, doElectron=false, doMuon=false, doPhoton=false;
   std::vector<edm::ParameterSet> psets = iConfig.getParameter<std::vector<edm::ParameterSet>>("modules");
   for (unsigned int i=0; i<psets.size(); ++i) {
     std::string type = psets[i].getParameter<std::string>("type");
-
-    if (type == "Electron") {
-      container.push_back(new GlobeElectron(psets[i]));
-      doElectron = true;
-    } else if (type == "Common")
-      container.push_back(new GlobeCommon(psets[i]));
-    else if (type == "Generator") {
-      container.push_back( new GlobeGenerator(iConfig));
-      doGenerator = true;
-    } else if (type == "GenParticle") {
-      container.push_back(new GlobeGenParticles(iConfig));
-      doGenParticles = true;
-    } else if (type == "GenVertex")
-      container.push_back(new GlobeGenVertices(iConfig));
-    else if (type == "SimHit")
-      container.push_back(new GlobeSimHits(iConfig));
-    else if (type == "SimTrack")
-      container.push_back(new GlobeSimTracks(iConfig));
-    else if (type == "L1")
-      container.push_back(new GlobeL1(iConfig)); 
-    else if (type == "HKT")
-      container.push_back(new GlobeHLT(iConfig)); 
-    else if (type == "ECALCluster")
-      container.push_back(new GlobeEcalClusters(iConfig));
-    else if (type == "CaloTower")
-      container.push_back(new GlobeCaloTowers(iConfig));
-    else if (type == "Track")
-      container.push_back(new GlobeTracks(iConfig));
-    else if (type == "GsfTrack")
-      container.push_back(new GlobeGsfTracks(iConfig));
-    else if (type == "TrackingParticle")
-      container.push_back(new GlobeTrackingParticles(iConfig));
-    else if (type == "Vertex")
-      container.push_back(new GlobeVertex(iConfig));
-    else if (type == "Photon") {
-      container.push_back(new GlobePhotons(iConfig));
-      doPhoton = true;
-    } else if (type == "Conversion")
-      container.push_back(new GlobeConversions(iConfig));
-    else if (type == "Muon") {
-      container.push_back(new GlobeMuons(iConfig));
-      doMuon = true;
-    } else if (type == "MET")
-      container.push_back(new GlobeMET(iConfig)); 
-    else if (type == "GenJet")
-      container.push_back(new GlobeGenJets(iConfig));
-    else if (type == "Jet")
-      container.push_back(new GlobeJets(iConfig));
-    else if (type == "Jet")
-      container.push_back(new GlobeSelector(iConfig));
-    else if (type == "ReducedGen")
-      container.push_back(new GlobeReducedGen(iConfig));
-    else if (type == "PF")
-      container.push_back(new GlobePFCandidates(iConfig));
-    else if (type == "Rho")
-      container.push_back(new GlobeRho(iConfig));
-    else if (type == "PU")
-      container.push_back(new GlobePileup(iConfig));
-    else if (type == "PdfWeight")
-      container.push_back(new GlobePdfWeights(iConfig));
-    else if (type == "ECALHit")
-      container.push_back(new GlobeEcalHits(iConfig)); 
-    else if (type == "HCALCluster")
-      container.push_back(new GlobeHcal(iConfig));
-    else
-      std::cout << "WARNING: unrecognized type " << type << " fix your configuation." <<std::endl;
+    container.push_back(map[type](pset[i]));
   }
+
+  std::sort(container.begin(), container.end(), [](GlobeBase* l, GlobeBase* r) { return l->order < r->order; })
 
   debug_level = iConfig.getParameter<int>("Debug_Level");
 
-  if(doGenerator and doGenParticles) {
-    std::cout << "doGenerator and doGenParticles cannot be true at the same time." << std::endl;
-    throw;
-  }
+  //if(doGenerator and doGenParticles) {
+  //  std::cout << "doGenerator and doGenParticles cannot be true at the same time." << std::endl;
+  //  throw;
+  // }
 
-  if (!doElectron and !doMuon and !doPhoton) {
-    std::cout << "WARNING: EcalRecHits and HcalRecHits need Electrons, Muons or Photons." << std::endl;
-    throw;
-  }
+  //if (!doElectron and !doMuon and !doPhoton) {
+  //  std::cout << "WARNING: EcalRecHits and HcalRecHits need Electrons, Muons or Photons." << std::endl;
+  //  throw;
+  //}
   
   readConfiguration(iConfig);
   nProcessedEvents = 0;

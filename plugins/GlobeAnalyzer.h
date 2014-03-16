@@ -64,13 +64,15 @@ Implementation:
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobePileup.h"
 
 #include "TFile.h"
-//#include "TRFIOFile.h"
 #include "TTree.h"
 
 // system include files
 #include <memory>
 #include <vector>
 #include <string>
+#include <algorithm>
+
+typedef std::map<std::string, GlobeBase*(*)()> map_type;
 
 class GlobeAnalyzer : public edm::EDAnalyzer {
 public:
@@ -107,6 +109,8 @@ public:
   std::vector<GlobeBase*> container;
 
 private:
+  template<typename T> GlobeBase* createInstance(const edm::ParameterSet& pset) { return new T(pset); }
+  void defineMap();
   void beginJob();
   void analyze(const edm::Event&, const edm::EventSetup&);
   void endLuminosityBlock(const edm::LuminosityBlock &, const edm::EventSetup &);
@@ -130,14 +134,9 @@ private:
   int selector_bits;
 
   int debug_level;
-  
-  // bool fullHLT;
-  //std::vector<edm::InputTag> theElHLTLabels;
-  //std::vector<edm::InputTag> theMuHLTLabels;
-  //std::vector<edm::InputTag> thePhHLTLabels;
-  //std::vector<edm::InputTag> theJetHLTLabels;
-
   Int_t nProcessedEvents;
+
+  map_type map;
 };
 
 #endif
