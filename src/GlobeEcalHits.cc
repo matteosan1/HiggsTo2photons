@@ -50,9 +50,6 @@ void GlobeEcalHits::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("ecalhit_p4", "TClonesArray", &ecalhit_p4, 32000, 0);
 }
 
-//bool GlobeEcalHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup,
-//                            GlobeLeptons *lep, GlobeElectrons *el, GlobeMuons *mu,
-//                            GlobePhotons *pho) {
 bool GlobeEcalHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup,
                             GlobeElectrons *el, GlobeMuons *mu, GlobePhotons *pho) {
 

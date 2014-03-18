@@ -11,11 +11,12 @@
 #include <string>
 
 class GlobeAnalyzer;
+class GlobeCuts;
 
 class GlobeBase : public edm:EDAnalyzer {
  public:
 
-  GlobeBase(const edm::ParameterSet&) { type_ = "Base"; prefix_ = ""; order = =1; };
+  GlobeBase(const edm::ParameterSet&);
   ~GlobeAnalyzer() {};
   
   virtual std::string type() { return type_; };
@@ -30,6 +31,8 @@ class GlobeBase : public edm:EDAnalyzer {
  private:
   std::string type_;
   std::string prefix_;
+  GlobeCuts* gCUT;
+  int debug_level;
   int order;
 };
 

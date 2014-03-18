@@ -84,16 +84,6 @@ GlobeAnalyzer::GlobeAnalyzer(const edm::ParameterSet& iConfig) {
 
   debug_level = iConfig.getParameter<int>("Debug_Level");
 
-  //if(doGenerator and doGenParticles) {
-  //  std::cout << "doGenerator and doGenParticles cannot be true at the same time." << std::endl;
-  //  throw;
-  // }
-
-  //if (!doElectron and !doMuon and !doPhoton) {
-  //  std::cout << "WARNING: EcalRecHits and HcalRecHits need Electrons, Muons or Photons." << std::endl;
-  //  throw;
-  //}
-  
   readConfiguration(iConfig);
   nProcessedEvents = 0;
 }
@@ -132,11 +122,6 @@ void GlobeAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     nProcessedEvents = 0;
   }
 
-  
-  //  tracks->GetAssociatedTrackingParticleIndex(iEvent,iSetup,trackingParticles);
-  
-  //  ecalrechits->analyze(iEvent, iSetup, std_electrons, muons, photons);
-  //  hcalhits->analyze(iEvent, iSetup, std_electrons, muons, photons);
   
   //if (doGenParticles || doGenerator)
   //  selector_bits = selector->select(std_electrons, muons, photons, gen, leptons, reducedgen).to_ulong();

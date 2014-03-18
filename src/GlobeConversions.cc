@@ -4,12 +4,12 @@
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 
-GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig, const char* n): nome(n) {
+GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig) {
 
+  GlobeBase::GlobeBase(iConfig);
   char a[100];
   sprintf(a, "ElectronColl%s", nome);
 
-  debug_level = iConfig.getParameter<int>("Debug_Level");
   doAodSim = iConfig.getParameter<bool>("doAodSim");
 
   // allConversions
@@ -20,18 +20,10 @@ GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig, const char*
   endcapSuperClusterColl = iConfig.getParameter<edm::InputTag>("EndcapSuperClusterColl");
 
   // PHOTONS 
-  photonCollStd =  iConfig.getParameter<edm::InputTag>("PhotonCollStd");
-  
-  // Particle Flow
-  //pfColl = iConfig.getParameter<edm::InputTag>("PFCandidateColl");
+  photonColl =  iConfig.getParameter<edm::InputTag>("PhotonColl");
   pfPhotonsColl = iConfig.getParameter<edm::InputTag>("PhotonCollPf");
-  
   beamSpotColl = iConfig.getParameter<edm::InputTag>("BeamSpot");
   eleColl = iConfig.getParameter<edm::InputTag>(a);
-
-  // get cut thresholds
-  gCUT = new GlobeCuts(iConfig);
-
   conv_nHitsBeforeVtx = new std::vector<std::vector<unsigned short> >; conv_nHitsBeforeVtx->clear();
   conv_quality = new std::vector<std::vector<int> >; conv_quality->clear();
 
@@ -39,6 +31,7 @@ GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig, const char*
 
 void GlobeConversions::defineBranch(GlobeAnalyzer* ana) {
 
+  GlobeBase::defineBranch(ana);
   conv_p4 = new TClonesArray("TLorentzVector",MAX_CONVERTEDPHOTONS);
   ana->Branch("conv_n", &conv_n, "conv_n/I");
   //// conversion quantities 
@@ -53,10 +46,10 @@ void GlobeConversions::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("conv_detatrksatecal",&conv_detatrksatecal,"conv_detatrksatecal[conv_n]/F");
   ana->Branch("conv_quality","std::vector<std::vector<int> >",&conv_quality);
   ana->Branch("conv_type",&conv_type,"conv_type[conv_n]/I");
-  ana->Branch("conv_dxy",&conv_dxy,"conv_dxy[conv_n]/F"); // will not be filled because this will only be available from 420
-  ana->Branch("conv_dz",&conv_dz,"conv_dz[conv_n]/F");    // will not be filled because this will only be available from 420
-  ana->Branch("conv_lxy",&conv_lxy,"conv_lxy[conv_n]/F"); // will not be filled because this will only be available from 420
-  ana->Branch("conv_lz",&conv_lz,"conv_lz[conv_n]/F");    // will not be filled because this will only be available from 420
+  ana->Branch("conv_dxy",&conv_dxy,"conv_dxy[conv_n]/F"); 
+  ana->Branch("conv_dz",&conv_dz,"conv_dz[conv_n]/F");    
+  ana->Branch("conv_lxy",&conv_lxy,"conv_lxy[conv_n]/F"); 
+  ana->Branch("conv_lz",&conv_lz,"conv_lz[conv_n]/F");    
   ana->Branch("conv_zofprimvtxfromtrks",&conv_zofprimvtxfromtrks,"conv_zofprimvtxfromtrks[conv_n]/F");
   ana->Branch("conv_nHitsBeforeVtx", "std::vector<std::vector<unsigned short> >", &conv_nHitsBeforeVtx);
   ana->Branch("conv_nSharedHits",&conv_nSharedHits,"conv_nSharedHits[conv_n]/I");
@@ -126,9 +119,6 @@ bool GlobeConversions::analyze(const edm::Event& iEvent, const edm::EventSetup& 
   edm::Handle<reco::PhotonCollection> PhoH;
   iEvent.getByLabel(photonCollStd, PhoH);
   
-  //edm::Handle<reco::PFCandidateCollection> pfHandle;
-  //iEvent.getByLabel(pfColl, pfHandle);
-
   edm::Handle<reco::PhotonCollection> pfPhotonsH;
   iEvent.getByLabel(pfPhotonsColl, pfPhotonsH);
 

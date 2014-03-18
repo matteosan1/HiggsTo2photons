@@ -4,12 +4,15 @@
 #include <iostream>
 
 GlobeCommon::GlobeCommon(const edm::ParameterSet& iConfig) {
+  GlobeBase::GlobeBase(iConfig);
   generatorColl = iConfig.getParameter<edm::InputTag>("GeneratorColl");
   doParticleGun =iConfig.getParameter<bool>("doParticleGun");
+  order = -1;
 }
 
 void GlobeCommon::defineBranch(GlobeAnalyzer* ana) {
 
+  GlobeBase::defineBranch(ana);
   ana->Branch("event", &event, "event/I");
   ana->Branch("run", &run, "run/I");
   ana->Branch("process_id", &process_id, "process_id/I");
@@ -35,8 +38,6 @@ bool GlobeCommon::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   run = iEvent.id().run();  
   lumis = iEvent.luminosityBlock();
   bx = iEvent.bunchCrossing();
-  //std::cout<<"event run "<<event<<" "<<run<<std::endl;
-  // add event PTHAT
   iEvent.getByLabel(generatorColl, HepMCEvt);
   iEvent.getByLabel ("generator", "weight", weightHandle);
   

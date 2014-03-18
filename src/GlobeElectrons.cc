@@ -1,7 +1,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeElectrons.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/Tools.h"
-#include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
@@ -21,7 +20,7 @@
 
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "Geometry/CaloTopology/interface/CaloTopology.h"
-#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
+#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"x
 
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 #include "RecoEgamma/EgammaIsolationAlgos/interface/EgammaTowerIsolation.h"
@@ -29,7 +28,7 @@
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 
 //#include "HiggsAnalysis/HiggsTo2photons/interface/PFIsolation.h"
-#include "HiggsAnalysis/HiggsTo2photons/interface/Mustache.h"
+//#include "HiggsAnalysis/HiggsTo2photons/interface/Mustache.h"
 
 #include "Utilities/General/interface/FileInPath.h"
 
@@ -43,13 +42,9 @@
 
 GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig) {
   
-  type_ = iConfig.getParameter<std::string>("type");
-  prefix_ = iConfig.getParameter<std::string>("prefix");
-  if (prefix_ != "")
-    prefix_ = "_"+prefix_;
+  GlobeBase::GlobeBase(iConfig);
 
   electronColl = iConfig.getParameter<edm::InputTag>("ElectronColl");
-  debug_level = iConfig.getParameter<int>("Debug_Level");
   doAodSim = iConfig.getParameter<bool>("doAodSim");
 
   conversionColl = iConfig.getParameter<edm::InputTag>("ConvertedPhotonColl");
@@ -66,8 +61,6 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig) {
   ecalHitEEColl = iConfig.getParameter<edm::InputTag>("EcalHitEEColl");
   ecalHitESColl = iConfig.getParameter<edm::InputTag>("EcalHitESColl");
   hcalHitColl = iConfig.getParameter<edm::InputTag>("HcalHitsBEColl");
-
-  eIDLabels = iConfig.getParameter<std::vector<edm::InputTag> >("eIDLabels");
 
   eleRegressionFilename = iConfig.getParameter<std::string> ("eleRegressionFileName");  
   eleRegressionType     = iConfig.getParameter<int> ("eleRegressionType");  
@@ -106,27 +99,22 @@ GlobeElectrons::GlobeElectrons(const edm::ParameterSet& iConfig) {
            true, // use manual cat
            myManualCatWeightsTrig);
 
-  //inputTagIsoValElectronsPFId_   = iConfig.getParameter< std::vector<edm::InputTag> >("IsoValElectronPF");   
-
   energyCorrectionsFromDB = iConfig.getParameter<bool> ("energyCorrectionsFromDB"); 
   energyRegFilename       = iConfig.getParameter<std::string> ("energyCorrectionsFileNameEle");  
   regressionVersion       = iConfig.getParameter<std::string> ("energyCorrectionsVersion");
-
-  // get cut thresholds
-  gCUT = new GlobeCuts(iConfig);
-  gES  = new GlobeEcalClusters(iConfig);
 }
 
 GlobeElectrons::~GlobeElectrons() {
 
   delete myMVANonTrig;
   delete myMVATrig;
-  delete gCUT;
-  delete gES;
+  GlobeBase::~GlobeBase();
 }
 
 void GlobeElectrons::defineBranch(GlobeAnalyzer* ana) {
-
+  
+  GlobeBase::defineBranch(ana);
+  
   el_sc = new TClonesArray("TLorentzVector", MAX_ELECTRONS);
   el_p4 = new TClonesArray("TLorentzVector", MAX_ELECTRONS);
   el_p4_corr = new TClonesArray("TLorentzVector", MAX_ELECTRONS);
