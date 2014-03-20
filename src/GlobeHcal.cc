@@ -1,25 +1,21 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeHcal.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
-GlobeHcal::GlobeHcal(const edm::ParameterSet& iConfig, const char* n): nome(n) {
-
+GlobeHcal::GlobeHcal(const edm::ParameterSet& iConfig) {
+  
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
   hcalBEColl =  iConfig.getParameter<edm::InputTag>("HcalHitsBEColl");
   hcalFColl =  iConfig.getParameter<edm::InputTag>("HcalHitsFColl");
   hcalHoColl =  iConfig.getParameter<edm::InputTag>("HcalHitsHoColl");
   
   doHFHcal = iConfig.getParameter<bool>("doHFHcal");
-
-  debug_level = iConfig.getParameter<int>("Debug_Level");
-
   edm::ParameterSet psetHcal = iConfig.getParameter<edm::ParameterSet>("HcalHitsCuts");
-
-  // get cut thresholds
-  gCUT = new GlobeCuts(iConfig);
 }
 
 void GlobeHcal::defineBranch(GlobeAnalyzer* ana) {
 
-  // think about changing branch names for duplicate collections
+  GlobeBase::defineBranch(ana);
   hc_p4 = new TClonesArray("TLorentzVector", MAX_HCALHITS);
   ana->Branch("hc_p4", "TClonesArray", &hc_p4, 32000, 0);
   ana->Branch("hc_n", &hc_n, "hc_n/I");

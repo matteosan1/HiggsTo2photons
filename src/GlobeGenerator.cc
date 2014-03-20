@@ -5,18 +5,17 @@
 
 GlobeGenerator::GlobeGenerator(const edm::ParameterSet& iConfig) {
   
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
   generatorColl = iConfig.getParameter<edm::InputTag>("GeneratorColl");
-  debug_level = iConfig.getParameter<int>("Debug_Level");
-  
   edm::ParameterSet psetGenerator = iConfig.getParameter<edm::ParameterSet>("GeneratorCuts");
   
-  // get cut thresholds
   etCut_ =  psetGenerator.getParameter<double>("EtCut");
 }
 
 void GlobeGenerator::defineBranch(GlobeAnalyzer* ana) {
 
-  // think about changing branch names for duplicate collections
+  GlobeBase::defineBranch(ana);
   gen_p4 = new TClonesArray("TLorentzVector", MAX_GENERATOR);
   
   ana->Branch("gen_n", &gen_n, "gen_n/I");

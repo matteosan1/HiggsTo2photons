@@ -5,14 +5,14 @@
 
 GlobeGenParticles::GlobeGenParticles(const edm::ParameterSet& iConfig) {
   
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
   genParticlesColl = iConfig.getParameter<edm::InputTag>("GenParticlesColl");
-  debug_level = iConfig.getParameter<int>("Debug_Level");
-  gCUT = new GlobeCuts(iConfig);
 }
 
 void GlobeGenParticles::defineBranch(GlobeAnalyzer* ana) {
-
-  // think about changing branch names for duplicate collections
+  
+  GlobeBase::defineBranch(ana);
   gp_p4 = new TClonesArray("TLorentzVector", MAX_GENERATOR);
   gp_vtx = new TClonesArray("TVector3", MAX_GENERATOR);
   

@@ -2,10 +2,10 @@
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
 GlobePileup::GlobePileup(const edm::ParameterSet& iConfig) {
-  
+
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
   pileupCollection =  iConfig.getParameter<edm::InputTag>("pileupInfoCollection");
-  debug_level = iConfig.getParameter<int>("Debug_Level"); 
-  
   pu_zpos = new std::vector<float>; pu_zpos->clear();
   pu_sumpt_lowpt = new std::vector<float>; pu_sumpt_lowpt->clear();
   pu_sumpt_highpt = new std::vector<float>; pu_sumpt_highpt->clear();
@@ -18,6 +18,7 @@ GlobePileup::GlobePileup(const edm::ParameterSet& iConfig) {
 
 void GlobePileup::defineBranch(GlobeAnalyzer* ana) {
   
+  GlobeBase::defineBranch(ana);
   ana->Branch("pu_n", &pu_n, "pu_n/I");
   ana->Branch("pu_n_true", &pu_n_true, "pu_n_true/F");
   ana->Branch("pu_bunchcrossing", &pu_bunchcrossing, "pu_bunchcrossing/I");

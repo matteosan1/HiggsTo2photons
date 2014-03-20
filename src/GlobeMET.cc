@@ -16,26 +16,29 @@
 #include "DataFormats/METReco/interface/PFMET.h"
 #include "DataFormats/METReco/interface/PFMETCollection.h"
 
-GlobeMET::GlobeMET(const edm::ParameterSet& iConfig, const char* n): nome(n) {
+GlobeMET::GlobeMET(const edm::ParameterSet& iConfig) {
   
-  caloMETColl =  iConfig.getParameter<edm::InputTag>("CaloMETColl");
-  if(strcmp(nome, "tcmet") == 0) 
-    tcMETColl =  iConfig.getParameter<edm::InputTag>("TcMETColl");
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
+  caloMETColl =  iConfig.getParameter<edm::InputTag>("METColl");
+  //if(strcmp(nome, "tcmet") == 0) 
+  //  tcMETColl =  iConfig.getParameter<edm::InputTag>("TcMETColl");
   
-  if(strcmp(nome, "pfmet") == 0) {
-    pfMETColl =  iConfig.getParameter<edm::InputTag>("PFMETColl");
+  //if(strcmp(nome, "pfmet") == 0) {
+  //  pfMETColl =  iConfig.getParameter<edm::InputTag>("PFMETColl");
+  if (iConfig.exists("PFMETTYPE1Coll"))
     pfType1METColl = iConfig.getParameter<edm::InputTag>("PFMETTYPE1Coll");
-  }
+  //}
 
   muonGlobalColl =  iConfig.getParameter<edm::InputTag>("MuonColl");
-
-  jetColl =  iConfig.getParameter<edm::InputTag>("JetColl_algo1");
-
-  debug_level = iConfig.getParameter<int>("Debug_Level");
+  jetColl =  iConfig.getParameter<edm::InputTag>("JetColl");
 }
 
 void GlobeMET::defineBranch(GlobeAnalyzer* ana) {
-   
+  
+  GlobeBase::defineBranch(ana);
+
+  // FIXME add prefix
   if(strcmp(nome, "tcmet") != 0 && strcmp(nome, "pfmet") != 0){
     ana->Branch("met_met", &met_met, "met_met/F");
     ana->Branch("met_phi", &met_phi, "met_phi/F");

@@ -5,23 +5,23 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/Common/interface/RefToBase.h" 
 
-GlobeVertex::GlobeVertex(const edm::ParameterSet& iConfig, const char* n): nome(n) {
+GlobeVertex::GlobeVertex(const edm::ParameterSet& iConfig) {
   
-  char a[100];
-  sprintf(a, "VertexColl_%s", nome);
-  vertexColl = iConfig.getParameter<edm::InputTag>(a);
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
+
+  vertexColl = iConfig.getParameter<edm::InputTag>("VertexColl");
   trackColl = iConfig.getParameter<edm::InputTag>("TrackColl");
   bsColl =   iConfig.getParameter<edm::InputTag>("BeamSpot");
-  
-  debug_level = iConfig.getParameter<int>("Debug_Level");
-  // get cut thresholds
-  gCUT = new GlobeCuts(iConfig); 
+
   vtx_tkind = new std::vector<std::vector<short> >;
   vtx_tkweight = new std::vector<std::vector<float> >;
 
 }
 
 void GlobeVertex::defineBranch(GlobeAnalyzer* ana) {
+
+  GlobeBase::defineBranch(ana);
 
   bs_xyz = new TClonesArray("TVector3",1);
   vtx_xyz = new TClonesArray("TVector3", MAX_TRACKS);

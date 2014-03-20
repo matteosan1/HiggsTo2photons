@@ -7,13 +7,14 @@ using namespace edm;
 
 GlobeGenVertices::GlobeGenVertices(const edm::ParameterSet& iConfig) {
   
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
   genParticlesColl = iConfig.getParameter<edm::InputTag>("GenParticlesColl");
-  debug_level = iConfig.getParameter<int>("Debug_Level");
 }
 
 void GlobeGenVertices::defineBranch(GlobeAnalyzer* ana) {
 
-  // think about changing branch names for duplicate collections
+  GlobeBase::defineBranch(ana);
   gv_pos = new TClonesArray("TVector3", MAX_VERTICES);
   gv_p3 = new TClonesArray("TVector3", MAX_VERTICES);
   

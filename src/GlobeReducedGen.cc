@@ -2,7 +2,6 @@
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
 GlobeReducedGen::GlobeReducedGen(const edm::ParameterSet& iConfig) {
-
   dR_min_for_matching = iConfig.getParameter<double>("GlobeReducedGendRMin");
 }
 

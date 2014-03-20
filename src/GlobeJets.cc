@@ -25,17 +25,17 @@
 //#include "PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h"
 #include <iostream>
 
-GlobeJets::GlobeJets(const edm::ParameterSet& iConfig, const char* n = "algo1"): nome(n) {
+GlobeJets::GlobeJets(const edm::ParameterSet& iConfig) {
   
-  char a[100];
-  sprintf (a,"JetColl_%s", nome);
-  jetColl =  iConfig.getParameter<edm::InputTag>(a);
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
+  jetColl =  iConfig.getParameter<edm::InputTag>("JetColl");
   calotowerColl =  iConfig.getParameter<edm::InputTag>("CaloTowerColl");
   trackColl =  iConfig.getParameter<edm::InputTag>("TrackColl");
-  pfak5corrdata =  iConfig.getUntrackedParameter<std::string>("JetCorrectionData_"+std::string(n), "");
-  pfak5corrmc   =  iConfig.getUntrackedParameter<std::string>("JetCorrectionMC_"+std::string(n), "");
+  pfak5corrdata =  iConfig.getUntrackedParameter<std::string>("JetCorrectionData");
+  pfak5corrmc   =  iConfig.getUntrackedParameter<std::string>("JetCorrectionMC");
   vertexColl = iConfig.getParameter<edm::InputTag>("VertexColl_std");
-  jetMVAAlgos = iConfig.getUntrackedParameter<std::vector<edm::ParameterSet> >("puJetIDAlgos_"+std::string(n), std::vector<edm::ParameterSet>(0));
+  jetMVAAlgos = iConfig.getUntrackedParameter<std::vector<edm::ParameterSet> >("puJetIDAlgos", std::vector<edm::ParameterSet>(0));
   pfLooseId  = new PFJetIDSelectionFunctor( iConfig.getParameter<edm::ParameterSet>("pfLooseId") );
   std::string strnome = nome;
     
@@ -54,11 +54,8 @@ GlobeJets::GlobeJets(const edm::ParameterSet& iConfig, const char* n = "algo1"):
     jetTkAssColl =  iConfig.getParameter<edm::InputTag>(a);
   }
 
-  debug_level = iConfig.getParameter<int>("Debug_Level");
   jet_nvtx = iConfig.getParameter<unsigned int>("JetVertexToProcess");
   
-  // get cut thresholds
-  gCUT = new GlobeCuts(iConfig);
   jet_tkind =  new std::vector<std::vector<unsigned short> >;
   jet_calotwind =  new std::vector<std::vector<unsigned short> >;
 
@@ -69,6 +66,7 @@ GlobeJets::GlobeJets(const edm::ParameterSet& iConfig, const char* n = "algo1"):
 
 void GlobeJets::defineBranch(GlobeAnalyzer* ana) {
 
+  GlobeBase::defineBranch(ana);
   jet_p4 = new TClonesArray("TLorentzVector", MAX_JETS);
   
   char a1[50], a2[50];

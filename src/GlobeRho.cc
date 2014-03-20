@@ -1,16 +1,16 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeRho.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
-GlobeRho::GlobeRho(const edm::ParameterSet& iConfig, const char* n):nome(n) {
-  
-  char a[100];
-  sprintf(a, "rhoCollection_%s", nome);
-  rhoCollection =  iConfig.getParameter<edm::InputTag>(a);
-  debug_level = iConfig.getParameter<int>("Debug_Level");
+GlobeRho::GlobeRho(const edm::ParameterSet& iConfig) {
+
+  GlobeBase::GlobeBase(iConfig);
+  oreder = -1;
+  rhoCollection =  iConfig.getParameter<edm::InputTag>("rhoCollection");
 }
 
 void GlobeRho::defineBranch(GlobeAnalyzer* ana) {
   
+  GlobeBase::GlobeBase(ana);
   char a1[100], a2[100];
   sprintf(a1, "rho_%s", nome);
   sprintf(a2, "rho_%s/F", nome);

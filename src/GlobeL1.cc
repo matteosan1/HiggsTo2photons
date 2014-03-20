@@ -6,8 +6,10 @@
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerObjectMap.h"
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerObjectMapRecord.h"
 
-GlobeL1::GlobeL1(const edm::ParameterSet& iConfig, const char* n): nome(n) {
+GlobeL1::GlobeL1(const edm::ParameterSet& iConfig) {
   
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
   l1EMIso =  iConfig.getParameter<edm::InputTag>("L1EMIso");
   l1EMNonIso =  iConfig.getParameter<edm::InputTag>("L1EMNonIso");
   l1CenJet = iConfig.getParameter<edm::InputTag>("L1CenJet");
@@ -18,9 +20,6 @@ GlobeL1::GlobeL1(const edm::ParameterSet& iConfig, const char* n): nome(n) {
   m_gtReadoutRecord = iConfig.getParameter<edm::InputTag>("L1GtReadoutRecordTag");
   m_gtObjectMapRecord = iConfig.getParameter<edm::InputTag>("L1GtObjectMapRecordTag");
 
-  debug_level = iConfig.getParameter<int>("Debug_Level");
-
-
   l1bits_phy = new std::vector<int>;
   l1bits_tec = new std::vector<int>;
   l1_labels = new std::map<std::string, int>;
@@ -28,17 +27,16 @@ GlobeL1::GlobeL1(const edm::ParameterSet& iConfig, const char* n): nome(n) {
 
 void GlobeL1::defineBranch(GlobeAnalyzer* ana) {
   
+  GlobeBase::defineBranch(ana);
   ana->Branch("l1emiso_n", &l1emiso_n,"l1emiso_n/I");
   ana->Branch("l1emiso_eta", &l1emiso_eta,"l1emiso_eta[l1emiso_n]/F");
   ana->Branch("l1emiso_et", &l1emiso_et,"l1emiso_et[l1emiso_n]/F");
   ana->Branch("l1emiso_phi", &l1emiso_phi,"l1emiso_phi[l1emiso_n]/F");
-  //ana->Branch("l1emiso_rank", &l1emiso_rank,"l1emiso_rank[l1emiso_n]/I");
 
   ana->Branch("l1emnoniso_n", &l1emnoniso_n,"l1emnoniso_n/I");
   ana->Branch("l1emnoniso_et", &l1emnoniso_et,"l1emnoniso_et[l1emnoniso_n]/F");
   ana->Branch("l1emnoniso_eta", &l1emnoniso_eta,"l1emnoniso_eta[l1emnoniso_n]/F");
   ana->Branch("l1emnoniso_phi", &l1emnoniso_phi,"l1emnoniso_phi[l1emnoniso_n]/F");
-  //ana->Branch("l1emnoniso_rank", &l1emnoniso_rank,"l1emnoniso_rank[l1emnoniso_n]/I");
 
   ana->Branch("l1cenjet_n", &l1cenjet_n,"l1cenjet_n/I");
   ana->Branch("l1cenjet_et", &l1cenjet_et,"l1cenjet_et[l1cenjet_n]/F");

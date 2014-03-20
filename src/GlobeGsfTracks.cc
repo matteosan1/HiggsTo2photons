@@ -8,24 +8,22 @@
 #include "TrackingTools/GsfTools/interface/MultiGaussianStateTransform.h"
 #include "TrackingTools/GsfTools/interface/GaussianSumUtilities1D.h"
 
-GlobeGsfTracks::GlobeGsfTracks(const edm::ParameterSet& iConfig, const char* n): nome(n) {
+GlobeGsfTracks::GlobeGsfTracks(const edm::ParameterSet& iConfig) {
 
+  GlobeBase::GlobeBase(iConfig);
+  order = -1;
   doAodSim     = iConfig.getParameter<bool>("doAodSim");
   storeGsfTracksOnlyIfElectrons     = iConfig.getParameter<bool>("storeGsfTracksOnlyIfElectrons");
   trackColl    = iConfig.getParameter<edm::InputTag>("GsfTrackColl");
   trackColl2   = iConfig.getParameter<edm::InputTag>("TrackColl");
   tpColl       = iConfig.getParameter<edm::InputTag>("TPColl");
   assocLabel   = iConfig.getParameter<std::string>("AssocLabel");
-  debug_level  = iConfig.getParameter<int>("Debug_Level");
   electronColl = iConfig.getParameter<edm::InputTag>("ElectronColl");
-
-  // get cut thresholds
-  gCUT = new GlobeCuts(iConfig);
 }
 
 void GlobeGsfTracks::defineBranch(GlobeAnalyzer* ana) {
 
-  
+  GlobeBase::defineBranch(ana);
   gsf_tk_p4 = new TClonesArray("TLorentzVector", MAX_TRACKS);
   gsf_tk_vtx_pos = new TClonesArray("TVector3", MAX_TRACKS);
   gsf_tk_pinmode = new TClonesArray("TLorentzVector", MAX_TRACKS);
