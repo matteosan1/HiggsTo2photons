@@ -3,8 +3,8 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include <iostream>
 
-GlobeCommon::GlobeCommon(const edm::ParameterSet& iConfig) {
-  GlobeBase::GlobeBase(iConfig);
+GlobeCommon::GlobeCommon(const edm::ParameterSet& iConfig) : GlobeBase(iConfig) {
+
   generatorColl = iConfig.getParameter<edm::InputTag>("GeneratorColl");
   doParticleGun =iConfig.getParameter<bool>("doParticleGun");
   order = -1;
@@ -12,7 +12,7 @@ GlobeCommon::GlobeCommon(const edm::ParameterSet& iConfig) {
 
 void GlobeCommon::defineBranch(GlobeAnalyzer* ana) {
 
-  GlobeBase::defineBranch(ana);
+  defineBranch(ana);
   ana->Branch("event", &event, "event/I");
   ana->Branch("run", &run, "run/I");
   ana->Branch("process_id", &process_id, "process_id/I");
@@ -28,7 +28,7 @@ void GlobeCommon::defineLumiBranch(TTree* ana) {
   ana->Branch("lumis", &lumis, "lumis/I");
 }
 
-bool GlobeCommon::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void GlobeCommon::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   static int nerror=0;
 
@@ -69,8 +69,6 @@ bool GlobeCommon::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   
   if (weightHandle.isValid())  
     weight = (*weightHandle);
-
-  return true;
 }
 
 void GlobeCommon::endLumiBlock(const edm::LuminosityBlock & l, const edm::EventSetup & es) {

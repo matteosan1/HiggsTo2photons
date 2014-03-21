@@ -56,7 +56,7 @@ Implementation:
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeSelector.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeHLT.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeLeptons.h"
-#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeHT.h"
+//#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeHT.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeReducedGen.h"
 //#include "HiggsAnalysis/HiggsTo2photons/interface/GlobePAT.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobePdfWeights.h"

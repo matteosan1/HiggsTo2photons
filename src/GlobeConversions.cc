@@ -4,11 +4,7 @@
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 
-GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig) {
-
-  GlobeBase::GlobeBase(iConfig);
-  char a[100];
-  sprintf(a, "ElectronColl%s", nome);
+GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig):GlobeBase(iConfig) {
 
   doAodSim = iConfig.getParameter<bool>("doAodSim");
 
@@ -23,15 +19,15 @@ GlobeConversions::GlobeConversions(const edm::ParameterSet& iConfig) {
   photonColl =  iConfig.getParameter<edm::InputTag>("PhotonColl");
   pfPhotonsColl = iConfig.getParameter<edm::InputTag>("PhotonCollPf");
   beamSpotColl = iConfig.getParameter<edm::InputTag>("BeamSpot");
-  eleColl = iConfig.getParameter<edm::InputTag>(a);
+  eleColl = iConfig.getParameter<edm::InputTag>("ElectronColl");
   conv_nHitsBeforeVtx = new std::vector<std::vector<unsigned short> >; conv_nHitsBeforeVtx->clear();
   conv_quality = new std::vector<std::vector<int> >; conv_quality->clear();
-
+  order = -1;
 }
 
 void GlobeConversions::defineBranch(GlobeAnalyzer* ana) {
 
-  GlobeBase::defineBranch(ana);
+  defineBranch(ana);
   conv_p4 = new TClonesArray("TLorentzVector",MAX_CONVERTEDPHOTONS);
   ana->Branch("conv_n", &conv_n, "conv_n/I");
   //// conversion quantities 
@@ -106,7 +102,7 @@ void GlobeConversions::defineBranch(GlobeAnalyzer* ana) {
 
 }
 
-bool GlobeConversions::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void GlobeConversions::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   if (debug_level > 9) 
     {
@@ -117,7 +113,7 @@ bool GlobeConversions::analyze(const edm::Event& iEvent, const edm::EventSetup& 
   iEvent.getByLabel(allConversionsColl, convH);
 
   edm::Handle<reco::PhotonCollection> PhoH;
-  iEvent.getByLabel(photonCollStd, PhoH);
+  iEvent.getByLabel(photonColl, PhoH);
   
   edm::Handle<reco::PhotonCollection> pfPhotonsH;
   iEvent.getByLabel(pfPhotonsColl, pfPhotonsH);
@@ -594,6 +590,4 @@ bool GlobeConversions::analyze(const edm::Event& iEvent, const edm::EventSetup& 
   
   if(debug_level>9)
     std::cout << "End Conversion" << std::endl;
-
-  return true;
 }

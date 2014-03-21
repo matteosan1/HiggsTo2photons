@@ -5,11 +5,7 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/Limits.h"
-#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeCuts.h"
-
-#include "TTree.h"
-#include "TClonesArray.h"
-#include "TLorentzVector.h"
+#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeBase.h"
 
 #include "DataFormats/CaloTowers/interface/CaloTowerCollection.h"
 #include "DataFormats/CaloTowers/interface/CaloTower.h"
@@ -26,18 +22,19 @@
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 
+#include "TTree.h"
+#include "TClonesArray.h"
+#include "TLorentzVector.h"
 #include <iostream>
 
-class GlobeAnalyzer;
-
-class GlobeCaloTowers {
+class GlobeCaloTowers : public GlobeBase {
  public:
   
-  GlobeCaloTowers(const edm::ParameterSet&, const char* n="unused");
+  GlobeCaloTowers(const edm::ParameterSet&);
   virtual ~GlobeCaloTowers() {};
 
   void defineBranch(GlobeAnalyzer* ana);
-  bool analyze(const edm::Event&, const edm::EventSetup&);
+  void analyze(const edm::Event&, const edm::EventSetup&);
 
   // variables
 
@@ -51,10 +48,7 @@ class GlobeCaloTowers {
   Int_t ct_size[MAX_CALOTOWERS];
 
  private:
-  const char* nome;
-  GlobeCuts *gCUT;
   edm::InputTag calotowerColl; 
-  int debug_level;
 };
 
 

@@ -49,7 +49,7 @@ class GlobeElectrons : public GlobeBase {
   ~GlobeElectrons();
 
   void defineBranch(GlobeAnalyzer* ana);
-  bool analyze(const edm::Event&, const edm::EventSetup&);
+  void analyze(const edm::Event&, const edm::EventSetup&);
   std::map<DetId, EcalRecHit> rechits_map_;
 
   EGammaMvaEleEstimator* myMVANonTrig;

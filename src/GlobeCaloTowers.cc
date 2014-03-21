@@ -1,16 +1,15 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeCaloTowers.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
 
-GlobeCaloTowers::GlobeCaloTowers(const edm::ParameterSet& iConfig) {
+GlobeCaloTowers::GlobeCaloTowers(const edm::ParameterSet& iConfig) : GlobeBase(iConfig) {
 
-  GlobeBase::GlobeBase(iConfig);
   calotowerColl =  iConfig.getParameter<edm::InputTag>("CaloTowerColl");
   order = -1;
 }
 
 void GlobeCaloTowers::defineBranch(GlobeAnalyzer* ana) {
 
-  GlobeBase::defineBranch(ana);
+  defineBranch(ana);
   ana->Branch("ct_n", &ct_n, "ct_n/I");
   
   ct_p4 = new TClonesArray("TLorentzVector", MAX_CALOTOWERS);
@@ -24,7 +23,7 @@ void GlobeCaloTowers::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("ct_size", &ct_size, "ct_size[ct_n]/I");
 }
 
-bool GlobeCaloTowers::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void GlobeCaloTowers::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   
   // get collections
   edm::Handle<edm::SortedCollection<CaloTower> > caltowH;
@@ -66,6 +65,4 @@ bool GlobeCaloTowers::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     ct_size[ct_n] = ct->constituentsSize();
     ct_n++;
   }
-
-  return true;
 }

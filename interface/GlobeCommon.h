@@ -3,7 +3,7 @@
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/LuminosityBlock.h"
-
+#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeBase.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/Limits.h"
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
@@ -12,17 +12,15 @@
 #include "TClonesArray.h"
 #include "TLorentzVector.h"
 
-class GlobeAnalyzer;
-
-class GlobeCommon {
+class GlobeCommon : public GlobeBase {
  public:
   
-  GlobeCommon(const edm::ParameterSet&);
-  virtual ~GlobeCommon() {};
+  GlobeCommon(const edm::ParameterSet& iConfig);
+  ~GlobeCommon() {};
 
   void defineBranch(GlobeAnalyzer* ana);
   void defineLumiBranch(TTree* tree);
-  bool analyze(const edm::Event&, const edm::EventSetup&);
+  void analyze(const edm::Event&, const edm::EventSetup&);
   void endLumiBlock(const edm::LuminosityBlock &, const edm::EventSetup &);
 
   Int_t lumis;
@@ -33,9 +31,6 @@ class GlobeCommon {
   Float_t weight;
   Float_t pthat;
   bool doParticleGun;
-
-  //CHECK ADD Something like MC event type? For soups and so on, such as:
-  //CHECK Int_t typ_ev; 
   
  private:
   edm::InputTag generatorColl;

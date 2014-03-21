@@ -6,11 +6,7 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/Limits.h"
-#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeCuts.h"
-
-#include "TTree.h"
-#include "TClonesArray.h"
-#include "TLorentzVector.h"
+#include "HiggsAnalysis/HiggsTo2photons/interface/GlobeBase.h"
 
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
 #include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
@@ -42,18 +38,21 @@
 
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 #include "Math/VectorUtil.h"
+
+#include "TTree.h"
+#include "TClonesArray.h"
+#include "TLorentzVector.h"
+
 #include <iostream>
 
-class GlobeAnalyzer;
-
-class GlobeConversions {
+class GlobeConversions : GlobeBase {
  public:
   
-  GlobeConversions(const edm::ParameterSet&, const char* n = "unused");
-  virtual ~GlobeConversions() {};
+  GlobeConversions(const edm::ParameterSet&);
+   ~GlobeConversions() {};
 
   void defineBranch(GlobeAnalyzer* ana);
-  bool analyze(const edm::Event&, const edm::EventSetup&);
+  void analyze(const edm::Event&, const edm::EventSetup&);
 
   // variables
 
@@ -125,9 +124,7 @@ class GlobeConversions {
   Float_t conv_lxy_bs[MAX_CONVERTEDPHOTONS];
 
  private:
-  const char* nome;
-  GlobeCuts *gCUT;
-  edm::InputTag photonCollStd;
+  edm::InputTag photonColl;
   edm::InputTag allConversionsColl;
 
   // SUPER CLUSTERS
@@ -152,7 +149,6 @@ class GlobeConversions {
   edm::InputTag beamSpotColl;
   edm::InputTag eleColl;
 
-  int debug_level;
   bool doAodSim;
 
   edm::ESHandle<CaloGeometry> theCaloGeom_;

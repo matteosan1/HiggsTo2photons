@@ -556,7 +556,7 @@ void GlobeElectrons::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch(a1, &el_conv_vtxProb, a2);
 }
 
-bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   // take collections
   edm::Handle<reco::GsfElectronCollection> elH;
