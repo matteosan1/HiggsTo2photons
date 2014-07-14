@@ -95,13 +95,17 @@ class GlobePhotons {
   //shower shape variables
   Float_t pho_see[MAX_PHOTONS];
   Float_t pho_sieie[MAX_PHOTONS];
+  Float_t pho_sieie_cleaned[MAX_PHOTONS];
   Float_t pho_sipip[MAX_PHOTONS];
   Float_t pho_sieip[MAX_PHOTONS];
+  Float_t pho_sieip_cleaned[MAX_PHOTONS];
   Float_t pho_e1x5[MAX_PHOTONS];
   Float_t pho_e1x3[MAX_PHOTONS];
   Float_t pho_e2x2[MAX_PHOTONS];
   Float_t pho_e3x3[MAX_PHOTONS];
   Float_t pho_e5x5[MAX_PHOTONS];
+  Float_t pho_e2x2_cleaned[MAX_PHOTONS];
+  Float_t pho_e5x5_cleaned[MAX_PHOTONS];
   Float_t pho_emaxxtal[MAX_PHOTONS];
   Float_t pho_hoe[MAX_PHOTONS];
   Float_t pho_h1oe[MAX_PHOTONS];
@@ -112,6 +116,7 @@ class GlobePhotons {
   Float_t pho_r1x5[MAX_PHOTONS];
   Float_t pho_r2x5[MAX_PHOTONS];
   Float_t pho_r9[MAX_PHOTONS];
+  Float_t pho_r9_cleaned[MAX_PHOTONS];
   Float_t pho_zernike20[MAX_PHOTONS];
   Float_t pho_zernike42[MAX_PHOTONS];
   Float_t pho_eseffsixix[MAX_PHOTONS];
@@ -352,6 +357,9 @@ class GlobePhotons {
   edm::InputTag ecalHitEBColl;
   edm::InputTag ecalHitEEColl;
   edm::InputTag ecalHitESColl;
+  edm::InputTag ecalHitEBCleanedColl;
+  edm::InputTag ecalHitEECleanedColl;
+
 // HCAL HITS
   edm::InputTag hcalBEColl;
   edm::InputTag hcalFColl;

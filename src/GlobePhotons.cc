@@ -75,6 +75,8 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nom
   ecalHitEBColl = iConfig.getParameter<edm::InputTag>("EcalHitEBColl");
   ecalHitEEColl = iConfig.getParameter<edm::InputTag>("EcalHitEEColl");
   ecalHitESColl = iConfig.getParameter<edm::InputTag>("EcalHitESColl");
+  ecalHitEBCleanedColl = iConfig.getParameter<edm::InputTag>("EcalHitEBCleanedColl");
+  ecalHitEECleanedColl = iConfig.getParameter<edm::InputTag>("EcalHitEECleanedColl");
 
   hcalBEColl =  iConfig.getParameter<edm::InputTag>("HcalHitsBEColl");
   //hcalFColl =  iConfig.getParameter<edm::InputTag>("HcalHitsFColl");
@@ -195,7 +197,13 @@ void GlobePhotons::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("pho_r1x5", &pho_r1x5, "pho_r1x5[pho_n]/F");
   ana->Branch("pho_r2x5", &pho_r2x5, "pho_r2x5[pho_n]/F");
   ana->Branch("pho_r9", &pho_r9,"pho_r9[pho_n]/F");
-
+  
+  ana->Branch("pho_r9_cleaned", &pho_r9_cleaned,"pho_r9_cleaned[pho_n]/F");
+  ana->Branch("pho_sieie_cleaned",&pho_sieie_cleaned,"pho_sieie_cleaned[pho_n]/F");
+  ana->Branch("pho_sieip_cleaned",&pho_sieip_cleaned,"pho_sieip_cleaned[pho_n]/F");
+  ana->Branch("pho_e2x2_cleaned",&pho_e2x2_cleaned,"pho_e2x2_cleaned[pho_n]/F");
+  ana->Branch("pho_e5x5_cleaned",&pho_e5x5_cleaned,"pho_e5x5_cleaned[pho_n]/F");
+  
   ana->Branch("pho_eseffsixix",&pho_eseffsixix,"pho_eseffsixix[pho_n]/F");
   ana->Branch("pho_eseffsiyiy",&pho_eseffsiyiy,"pho_eseffsiyiy[pho_n]/F");
 
@@ -350,7 +358,6 @@ void GlobePhotons::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("pho_zernike20",&pho_zernike20,"pho_zernike20[pho_n]/F");
   ana->Branch("pho_zernike42",&pho_zernike42,"pho_zernike42[pho_n]/F");
   ana->Branch("pho_e2nd",&pho_e2nd,"pho_e2nd[pho_n]/F");
-  ana->Branch("pho_e5x5",&pho_e5x5,"pho_e5x5[pho_n]/F");
   ana->Branch("pho_e2x5right",&pho_e2x5right,"pho_e2x5right[pho_n]/F");
   ana->Branch("pho_e2x5left",&pho_e2x5left,"pho_e2x5left[pho_n]/F");
   ana->Branch("pho_e2x5top",&pho_e2x5top,"pho_e2x5top[pho_n]/F");
@@ -652,6 +659,8 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     }
 
     EcalClusterLazyTools lazyTool(iEvent, iSetup, ecalHitEBColl, ecalHitEEColl);   
+    EcalClusterLazyTools lazyToolCleaned(iEvent, iSetup, ecalHitEBCleanedColl, ecalHitEECleanedColl);   
+    
     if (regressionVersion == "V3") {
       std::pair<double,double> cor;
       //if (iEvent.isRealData()) 
@@ -755,11 +764,17 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     //shower shape variables
     pho_see[pho_n] = localPho->sigmaEtaEta();
     pho_sieie[pho_n] = localPho->sigmaIetaIeta();
+
+    pho_sieie_cleaned[pho_n] = sqrt(lazyToolCleaned.localCovariances(*seed_clu)[0]);
+    pho_sieip_cleaned[pho_n] = lazyToolCleaned.localCovariances(*seed_clu)[1];
+    
     pho_e1x5[pho_n] = localPho->e1x5();
     pho_e2x2[pho_n] = lazyTool.e2x2(*seed_clu);
+    pho_e2x2_cleaned[pho_n] = lazyToolCleaned.e2x2(*seed_clu);
     pho_e1x3[pho_n] = lazyTool.e1x3(*seed_clu);
     pho_e3x3[pho_n] = localPho->e3x3();
     pho_e5x5[pho_n] = localPho->e5x5();
+    pho_e5x5_cleaned[pho_n] = lazyToolCleaned.e5x5(*seed_clu);
     pho_emaxxtal[pho_n] = localPho->maxEnergyXtal();
     pho_hoe[pho_n] = localPho->hadronicOverEm();
     pho_h1oe[pho_n] = localPho->hadronicDepth1OverEm();
@@ -785,6 +800,7 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_r1x5[pho_n] = localPho->r1x5();
     pho_r2x5[pho_n] = localPho->r2x5();
     pho_r9[pho_n] = localPho->r9();
+    pho_r9_cleaned[pho_n] = lazyToolCleaned.e3x3(*seed_clu)/localPho->superCluster()->rawEnergy();
 
     pho_must[pho_n] = -9999.;
     pho_mustnc[pho_n] = -1;

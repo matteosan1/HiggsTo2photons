@@ -84,6 +84,8 @@ h2ganalyzer = cms.EDAnalyzer(
     
     EcalHitEBColl = cms.InputTag("reducedEcalRecHitsEB"),
     EcalHitEEColl = cms.InputTag("reducedEcalRecHitsEE"),
+    EcalHitEBCleanedColl = cms.InputTag("rechitTimeFilter:timeCleanedRecHits"),
+    EcalHitEECleanedColl = cms.InputTag("rechitTimeFilter:timeCleanedRecHits"),
     EcalHitESColl = cms.InputTag("reducedEcalRecHitsES"),
         
     HcalHitsBEColl = cms.InputTag("reducedHcalRecHits", "hbhereco"),

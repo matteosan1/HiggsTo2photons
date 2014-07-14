@@ -76,7 +76,7 @@ branchesToSkim.extend((
  'ecalhit_iphi',
  'ecalhit_ix',
  'ecalhit_iy',
- 'ecalhit_time',
+# 'ecalhit_time',
  'ecalhit_type',
  'ecalhit_zside',
  'el_std_bchits',

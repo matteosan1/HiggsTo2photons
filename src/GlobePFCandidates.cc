@@ -62,6 +62,7 @@ void GlobePFCandidates::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("pfcand_vz",&pfcand_vz,"pfcand_vz[pfcand_n]/F");
   ana->Branch("pfcand_overlappho",&pfcand_overlappho,"pfcand_overlappho[pfcand_n]/i");
   ana->Branch("pfcand_ispu",&pfcand_ispu,"pfcand_ispu[pfcand_n]/i");
+  ana->Branch("pfcand_time",&pfcand_time,"pfcand_time[pfcand_n]/F");
   //ana->Branch("pfcand_overlappho",&pfcand_overlappho,"pfcand_overlappho[pfcand_n][pho_n]/I");
 }
 
@@ -88,6 +89,11 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
   edm::Handle<reco::PhotonCollection> phoH;
   iEvent.getByLabel(photonCollStd, phoH);
+  
+  edm::Handle<EcalRecHitCollection> rhcH[2]; 
+  iEvent.getByLabel("reducedEcalRecHitsEB", rhcH[0]);
+  //ebRecHits_ = pEBRecHits.product();
+  iEvent.getByLabel("reducedEcalRecHitsEE", rhcH[1]);
 
   for (std::vector<reco::PFCandidate>::iterator it = candidates.begin(); it != candidates.end(); ++it) {
 
@@ -178,6 +184,11 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
       pfcand_mva_nothing_nh[pfcand_n] = it->mva_nothing_nh();
       pfcand_mva_gamma_nh[pfcand_n] = it->mva_gamma_nh();
       
+      if ((it->particleId() == 4 || it->particleId() == 2))
+	pfcand_time[pfcand_n] = candidateTime(it->p4(), rhcH, iSetup);
+      else
+	pfcand_time[pfcand_n] = 9999;
+	  
       new ((*pfcand_p4)[pfcand_n]) TLorentzVector();
       ((TLorentzVector *)pfcand_p4->At(pfcand_n))->SetXYZT(it->px(), it->py(), it->pz(), it->energy());
       
@@ -214,3 +225,44 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
   return true;
 }
 
+float GlobePFCandidates::candidateTime(LorentzVector dir, edm::Handle<EcalRecHitCollection>* rhcH, const edm::EventSetup& iSetup) {
+  edm::ESHandle<CaloGeometry> geoHandle;
+  iSetup.get<CaloGeometryRecord>().get(geoHandle);
+  const CaloGeometry& geometry = *geoHandle;
+  const CaloSubdetectorGeometry *geometry_p;
+  std::auto_ptr<const CaloSubdetectorTopology> topology;
+  
+  float weightedTsum   = 0;
+
+  for (unsigned int i=0; i<2; i++) {
+    const EcalRecHitCollection *recHits = rhcH[i].product();
+
+    if ((*recHits)[0].id().subdetId() == EcalBarrel) {
+      geometry_p = geometry.getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
+      topology.reset(new EcalBarrelTopology(geoHandle));
+    } else if ((*recHits)[0].id().subdetId() == EcalEndcap) {
+      geometry_p = geometry.getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+      topology.reset(new EcalEndcapTopology(geoHandle));
+    } else throw(std::runtime_error("\n\nProducer encountered invalied ecalhitcollection type.\n\n"));
+    
+    EcalRecHitCollection::const_iterator it;
+    for (it = recHits->begin(); it != recHits->end(); it++){
+      const CaloCellGeometry *this_cell = (*geometry_p).getGeometry(it->id());
+      GlobalPoint position = this_cell->getPosition();
+      
+      if (deltaR(position, dir) < 0.05) {
+	float timeError    = (*it).timeError();
+	// the constant used to build timeError is largely over-estimated ; remove in quadrature 0.6 and add 0.15 back.
+	// could be prettier if value of constant term was changed at recHit production level
+	if (timeError>0.6) 
+	  timeError = sqrt( timeError*timeError - 0.6*0.6 + 0.15*0.15);
+	else               
+	  timeError = sqrt( timeError*timeError           + 0.15*0.15);
+	
+	weightedTsum += (*it).time() / (timeError*timeError);
+      }
+    }
+  }
+  
+  return weightedTsum;
+}

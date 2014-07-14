@@ -97,6 +97,7 @@ if flagSkimPJet == 'ON':
 
 process.load("HiggsAnalysis.HiggsTo2photons.photonInvariantMassFilter_cfi")
 process.load("HiggsAnalysis.HiggsTo2photons.CMSSW_RelValDUMMY_cfi")
+process.load("HiggsAnalysis.HiggsTo2photons.rechitFilter_cfi")
 #process.source.skipEvents = cms.untracked.uint32(3500)
 
 hltLabel = "HLT"
@@ -533,7 +534,7 @@ if (flagFastSim == 'OFF' or flagAOD == 'OFF'):
   process.p11 *= process.piZeroDiscriminators
     
 #process.p11 *= (process.kt6PFJets* process.ak5PFJets* process.kt6PFJetsForRhoCorrection* process.h2ganalyzerPath)
-process.p11 *= (process.h2ganalyzerPath)
+process.p11 *= (process.rechitTimeFilter*process.h2ganalyzerPath)
 
 process.p12 = copy.deepcopy(process.p11)
 process.p12.replace(process.eventFilter1, process.eventFilter2)

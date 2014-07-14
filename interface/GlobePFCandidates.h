@@ -11,6 +11,15 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeTracks.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobePhotons.h"
 
+// Geometry
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/CaloTopology/interface/EcalBarrelTopology.h"
+#include "Geometry/CaloTopology/interface/EcalEndcapTopology.h"
+#include "Geometry/CaloTopology/interface/EcalPreshowerTopology.h"
+
 #include "TTree.h"
 #include "TClonesArray.h"
 #include "TLorentzVector.h"
@@ -25,6 +34,7 @@ class GlobePFCandidates {
 
   void defineBranch(GlobeAnalyzer* ana);
   bool analyze(const edm::Event&, const edm::EventSetup&, GlobeTracks*, GlobeMuons*, GlobePhotons*);
+  float candidateTime(LorentzVector dir, edm::Handle<EcalRecHitCollection>* rhcH, const edm::EventSetup& iSetup);
 
   // variables
   Int_t pfcand_n;
@@ -33,6 +43,7 @@ class GlobePFCandidates {
   Int_t pfcand_gsfind[MAX_PFCANDS];
   Int_t pfcand_muind[MAX_PFCANDS];
   Float_t pfcand_ecalEnergy[MAX_PFCANDS];
+  Float_t pfcand_time[MAX_PFCANDS];
   Float_t pfcand_hcalEnergy[MAX_PFCANDS];
   Float_t pfcand_rawEcalEnergy[MAX_PFCANDS];
   Float_t pfcand_rawHcalEnergy[MAX_PFCANDS];
