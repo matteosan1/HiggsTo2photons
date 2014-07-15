@@ -185,7 +185,7 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
       pfcand_mva_gamma_nh[pfcand_n] = it->mva_gamma_nh();
       
       if ((it->particleId() == 4 || it->particleId() == 2))
-	pfcand_time[pfcand_n] = candidateTime(it->p4(), rhcH, iSetup);
+	pfcand_time[pfcand_n] = candidateTime(it->positionAtECALEntrance(), rhcH, iSetup);
       else
 	pfcand_time[pfcand_n] = 9999;
 	  
@@ -225,7 +225,7 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
   return true;
 }
 
-float GlobePFCandidates::candidateTime(LorentzVector dir, edm::Handle<EcalRecHitCollection>* rhcH, const edm::EventSetup& iSetup) {
+float GlobePFCandidates::candidateTime(math::XYZPointF dir, edm::Handle<EcalRecHitCollection>* rhcH, const edm::EventSetup& iSetup) {
   edm::ESHandle<CaloGeometry> geoHandle;
   iSetup.get<CaloGeometryRecord>().get(geoHandle);
   const CaloGeometry& geometry = *geoHandle;
@@ -233,7 +233,7 @@ float GlobePFCandidates::candidateTime(LorentzVector dir, edm::Handle<EcalRecHit
   std::auto_ptr<const CaloSubdetectorTopology> topology;
   
   float weightedTsum   = 0;
-
+  float sumWeights     = 0;
   for (unsigned int i=0; i<2; i++) {
     const EcalRecHitCollection *recHits = rhcH[i].product();
 
@@ -250,7 +250,7 @@ float GlobePFCandidates::candidateTime(LorentzVector dir, edm::Handle<EcalRecHit
       const CaloCellGeometry *this_cell = (*geometry_p).getGeometry(it->id());
       GlobalPoint position = this_cell->getPosition();
       
-      if (deltaR(position, dir) < 0.05) {
+      if (deltaR(position, dir) < 0.01) {
 	float timeError    = (*it).timeError();
 	// the constant used to build timeError is largely over-estimated ; remove in quadrature 0.6 and add 0.15 back.
 	// could be prettier if value of constant term was changed at recHit production level
@@ -259,10 +259,11 @@ float GlobePFCandidates::candidateTime(LorentzVector dir, edm::Handle<EcalRecHit
 	else               
 	  timeError = sqrt( timeError*timeError           + 0.15*0.15);
 	
+	sumWeights   += 1/(timeError*timeError);
 	weightedTsum += (*it).time() / (timeError*timeError);
       }
     }
   }
   
-  return weightedTsum;
+  return weightedTsum/sumWeights;
 }

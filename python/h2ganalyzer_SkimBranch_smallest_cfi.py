@@ -403,7 +403,7 @@ branchesToSkim.extend((
  'pho_r2x5',
  'pho_schits',
  'pho_see',
- 'pho_seed_time',
+# 'pho_seed_time',
  'pho_smaj',
  'pho_trksumpthollowconedr04',
  'pho_trksumptsolidconedr03',

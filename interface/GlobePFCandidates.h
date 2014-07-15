@@ -34,7 +34,7 @@ class GlobePFCandidates {
 
   void defineBranch(GlobeAnalyzer* ana);
   bool analyze(const edm::Event&, const edm::EventSetup&, GlobeTracks*, GlobeMuons*, GlobePhotons*);
-  float candidateTime(LorentzVector dir, edm::Handle<EcalRecHitCollection>* rhcH, const edm::EventSetup& iSetup);
+  float candidateTime(math::XYZPointF dir, edm::Handle<EcalRecHitCollection>* rhcH, const edm::EventSetup& iSetup);
 
   // variables
   Int_t pfcand_n;
