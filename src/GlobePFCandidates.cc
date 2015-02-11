@@ -226,6 +226,7 @@ bool GlobePFCandidates::analyze(const edm::Event& iEvent, const edm::EventSetup&
 }
 
 float GlobePFCandidates::candidateTime(math::XYZPointF dir, edm::Handle<EcalRecHitCollection>* rhcH, const edm::EventSetup& iSetup) {
+  return 0;
   edm::ESHandle<CaloGeometry> geoHandle;
   iSetup.get<CaloGeometryRecord>().get(geoHandle);
   const CaloGeometry& geometry = *geoHandle;

@@ -96,7 +96,7 @@ bool GlobeEcalHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iSetup.get<CaloGeometryRecord>().get(geometry);
 
   const CaloSubdetectorGeometry* EB = geometry->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
-  const CaloSubdetectorGeometry* EE = geometry->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+  const CaloSubdetectorGeometry* EE = geometry->getSubdetectorGeometry(DetId::Ecal, EcalShashlik);//EcalEndcap);
   const CaloSubdetectorGeometry* ES = 0;
   if(doPreshowerHits) 
     ES = geometry->getSubdetectorGeometry(DetId::Ecal, EcalPreshower);

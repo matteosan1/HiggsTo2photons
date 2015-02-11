@@ -23,7 +23,7 @@ GlobeMET::GlobeMET(const edm::ParameterSet& iConfig, const char* n): nome(n) {
   
   if(strcmp(nome, "pfmet") == 0) {
     pfMETColl =  iConfig.getParameter<edm::InputTag>("PFMETColl");
-    pfType1METColl = iConfig.getParameter<edm::InputTag>("PFMETTYPE1Coll");
+    //pfType1METColl = iConfig.getParameter<edm::InputTag>("PFMETTYPE1Coll");
   }
 
   muonGlobalColl =  iConfig.getParameter<edm::InputTag>("MuonColl");
@@ -62,11 +62,11 @@ void GlobeMET::defineBranch(GlobeAnalyzer* ana) {
     ana->Branch("met_mEtSig_pfmet", &met_mEtSig_pfmet, "met_mEtSig_pfmet/F");
     ana->Branch("met_significance_pfmet", &met_significance_pfmet, "met_significance_pfmet/F");
     
-    ana->Branch("met_pfmetType1", &met_pfmetType1, "met_pfmetType1/F");
-    ana->Branch("met_phi_pfmetType1", &met_phi_pfmetType1, "met_phi_pfmetType1/F");
-    ana->Branch("met_sumet_pfmetType1", &met_sumet_pfmetType1, "met_sumet_pfmetType1/F");
-    ana->Branch("met_mEtSig_pfmetType1", &met_mEtSig_pfmetType1, "met_mEtSig_pfmetType1/F");
-    ana->Branch("met_significance_pfmetType1", &met_significance_pfmetType1, "met_significance_pfmetType1/F");
+    //ana->Branch("met_pfmetType1", &met_pfmetType1, "met_pfmetType1/F");
+    //ana->Branch("met_phi_pfmetType1", &met_phi_pfmetType1, "met_phi_pfmetType1/F");
+    //ana->Branch("met_sumet_pfmetType1", &met_sumet_pfmetType1, "met_sumet_pfmetType1/F");
+    //ana->Branch("met_mEtSig_pfmetType1", &met_mEtSig_pfmetType1, "met_mEtSig_pfmetType1/F");
+    //ana->Branch("met_significance_pfmetType1", &met_significance_pfmetType1, "met_significance_pfmetType1/F");
   }
 }
 
@@ -132,13 +132,13 @@ bool GlobeMET::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     met_mEtSig_pfmet       = pfmet_h->begin()->mEtSig();
     met_significance_pfmet = pfmet_h->begin()->significance();
     
-    iEvent.getByLabel(pfType1METColl, pfmet_h);
-  
-    met_pfmetType1              = pfmet_h->begin()->et();
-    met_phi_pfmetType1          = pfmet_h->begin()->phi();
-    met_sumet_pfmetType1        = pfmet_h->begin()->sumEt();
-    met_mEtSig_pfmetType1       = pfmet_h->begin()->mEtSig();	      
-    met_significance_pfmetType1 = pfmet_h->begin()->significance();
+//    iEvent.getByLabel(pfType1METColl, pfmet_h);
+//  
+//    met_pfmetType1              = pfmet_h->begin()->et();
+//    met_phi_pfmetType1          = pfmet_h->begin()->phi();
+//    met_sumet_pfmetType1        = pfmet_h->begin()->sumEt();
+//    met_mEtSig_pfmetType1       = pfmet_h->begin()->mEtSig();	      
+//    met_significance_pfmetType1 = pfmet_h->begin()->significance();
 
     //std::cout<<"met_pfmet  met_phi_pfmet  met_sumet_pfmet  met_mEtSig_pfmet  met_significance_pfmet  "<<
     //        met_pfmet<<"  "<<

@@ -621,8 +621,8 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //double rho = *(rhoHandle.product());
   
   // transient track builder needed for ele ID MVA
-  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder_);  
-  const TransientTrackBuilder thebuilder = *(trackBuilder_.product());
+  //iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder_);  
+  //const TransientTrackBuilder thebuilder = *(trackBuilder_.product());
   
   /*
   edm::Handle<reco::PFCandidateCollection> pfHandle;
@@ -632,9 +632,9 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByLabel("pfPileUp", pfHandlePu);
   */
 
-  edm::ESHandle<TransientTrackBuilder> hTransientTrackBuilder;
-  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", hTransientTrackBuilder);
-  transientTrackBuilder = hTransientTrackBuilder.product();
+  //edm::ESHandle<TransientTrackBuilder> hTransientTrackBuilder;
+  //iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", hTransientTrackBuilder);
+  //transientTrackBuilder = hTransientTrackBuilder.product();
 
   //IsoDepositVals electronIsoVals(3);
   //for (size_t j = 0; j<inputTagIsoValElectronsPFId_.size(); ++j) {
@@ -910,31 +910,31 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     
     el_gsfchi2[el_n] = egsf.gsfTrack()->normalizedChi2();
 
-    if(egsf.closestCtfTrackRef().isNonnull()) {
-      const double gsfsign = ((-egsf.gsfTrack()->dxy(vtxPoint)) >=0 ) ? 1. : -1.;
-      const reco::TransientTrack& tt = transientTrackBuilder->build(egsf.gsfTrack()); 
-      reco::VertexRef vtx(vtxH, 0);
-      const std::pair<bool, Measurement1D> &ip3dpv =  IPTools::absoluteImpactParameter3D(tt, *vtx);
-
-      if (ip3dpv.first) {
-	double ip3d = gsfsign*ip3dpv.second.value();
-	el_ip3d_err[el_n] = ip3dpv.second.error();  
-	el_ip3d[el_n] = ip3d; 
-	el_ip3d_sig[el_n] = ip3d/el_ip3d_err[el_n];
-      }
-      
-      el_kfhits[el_n] = egsf.closestCtfTrackRef()->hitPattern().trackerLayersWithMeasurement();
-      el_kfchi2[el_n] = egsf.closestCtfTrackRef()->normalizedChi2();
-      for(unsigned int j=0; j<tkH->size(); ++j) {
-        reco::TrackRef tk(tkH, j);
-        if(gCUT->cut(*tk))
-          continue; 
-        if (tk == egsf.closestCtfTrackRef()) {
-          el_tkind[el_n] = j;
-          el_ip_ctf[el_n] = (-1.)*egsf.closestCtfTrackRef()->dxy(vtxPoint);
-        }
-      }
-    } else {
+    //if(egsf.closestCtfTrackRef().isNonnull()) {
+    //const double gsfsign = ((-egsf.gsfTrack()->dxy(vtxPoint)) >=0 ) ? 1. : -1.;
+    //const reco::TransientTrack& tt = transientTrackBuilder->build(egsf.gsfTrack()); 
+    //reco::VertexRef vtx(vtxH, 0);
+    //const std::pair<bool, Measurement1D> &ip3dpv =  IPTools::absoluteImpactParameter3D(tt, *vtx);
+    //
+    //if (ip3dpv.first) {
+    //	double ip3d = gsfsign*ip3dpv.second.value();
+    //	el_ip3d_err[el_n] = ip3dpv.second.error();  
+    //	el_ip3d[el_n] = ip3d; 
+    //	el_ip3d_sig[el_n] = ip3d/el_ip3d_err[el_n];
+    //}
+    //
+    //el_kfhits[el_n] = egsf.closestCtfTrackRef()->hitPattern().trackerLayersWithMeasurement();
+    //el_kfchi2[el_n] = egsf.closestCtfTrackRef()->normalizedChi2();
+    //for(unsigned int j=0; j<tkH->size(); ++j) {
+    //  reco::TrackRef tk(tkH, j);
+    //  if(gCUT->cut(*tk))
+    //    continue; 
+    //  if (tk == egsf.closestCtfTrackRef()) {
+    //    el_tkind[el_n] = j;
+    //    el_ip_ctf[el_n] = (-1.)*egsf.closestCtfTrackRef()->dxy(vtxPoint);
+    //  }
+    //}
+    //else {
       el_kfhits[el_n] = -1;
       el_kfchi2[el_n] = 0.;
       el_tkind[el_n] = -1;
@@ -942,7 +942,7 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       el_ip3d[el_n] = -999.;
       el_ip3d_err[el_n] = -999.;
       el_ip3d_sig[el_n] = 0.0;
-    }
+      //}
     
     int index = 0;
     // loop over the two SC collections
@@ -1011,17 +1011,17 @@ bool GlobeElectrons::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       bchits.push_back((egsf.superCluster()->seed()->hitsAndFractions())[j].first);
     el_bchits->push_back(bchits);
 
-    el_mva_nontrig[el_n] = myMVANonTrig->mvaValue(egsf, 
-						  vtxH->front(), 
-						  thebuilder,
-						  ecalLazyTool,
-						  false);
+    el_mva_nontrig[el_n] = 0;//myMVANonTrig->mvaValue(egsf, 
+    //			  vtxH->front(), 
+    //						  thebuilder,
+    //						  ecalLazyTool,
+    //						  false);
     
-    el_mva_trig[el_n] = myMVATrig->mvaValue(egsf,
-					    vtxH->front(),
-					    thebuilder,
-					    ecalLazyTool,
-					    false);
+    el_mva_trig[el_n] = 0;//myMVATrig->mvaValue(egsf,
+    //		    vtxH->front(),
+    //					    thebuilder,
+    //					    ecalLazyTool,
+    //					    false);
     
     //std::cout<<"el_n el_mva_trig el_mva_nontrig "<<el_n<<" "<<el_mva_trig[el_n]<<" "<<el_mva_nontrig[el_n]<<std::endl;
 
