@@ -41,7 +41,7 @@ process.load('Configuration.StandardSequences.Services_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'PH2_1K_FB_V6::All', '') 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
 process.load("HiggsAnalysis.HiggsTo2photons.h2ganalyzer_61X_cfi")
 
@@ -62,7 +62,7 @@ process.options = cms.untracked.PSet(
 )
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 500
+process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1001))
 
 process.dummySelector = cms.EDFilter("CandViewCountFilter",
@@ -185,11 +185,14 @@ process.h2ganalyzer.doJet_algo3 = False
 process.h2ganalyzer.doJet_algoPF1 = False
 process.h2ganalyzer.doJet_algoPF2 = False
 process.h2ganalyzer.doJet_algoPF3 = False
-process.h2ganalyzer.doGenJet_algo1 = False
+process.h2ganalyzer.doGenJet_algo1 = True
 process.h2ganalyzer.doGenJet_algo2 = False
 process.h2ganalyzer.doGenJet_algo3 = False
 process.h2ganalyzer.doGsfTracks = False
 process.h2ganalyzer.doTracks = False
+process.h2ganalyzer.doVertices_nobs=False
+process.h2ganalyzer.doMet=False
+process.h2ganalyzer.dotcMet=False
 process.h2ganalyzer.h2gAnalyzerVersion = 'V15_00_11'
 
 process.h2ganalyzer.EcalHitEBColl = cms.InputTag("ecalRecHit:EcalRecHitsEB")
