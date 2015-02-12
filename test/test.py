@@ -41,7 +41,6 @@ process.load('Configuration.StandardSequences.Services_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'PH2_1K_FB_V6::All', '') 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
 process.load("HiggsAnalysis.HiggsTo2photons.h2ganalyzer_61X_cfi")
 
@@ -63,7 +62,7 @@ process.options = cms.untracked.PSet(
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1001))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
 
 process.dummySelector = cms.EDFilter("CandViewCountFilter",
                                      src = cms.InputTag("gsfElectrons"),
@@ -202,3 +201,13 @@ process.rechitTimeFilter.EBCollection = cms.InputTag("ecalRecHit:EcalRecHitsEB")
 process.rechitTimeFilter.EECollection = cms.InputTag("ecalRecHit:EcalRecHitsEK")
 
 process.h2ganalyzer.PhotonCollStd = cms.InputTag("mustachePhotons")
+
+process.h2ganalyzer.EndcapBasicClusterColl = cms.InputTag("particleFlowSuperClusterECAL:particleFlowBasicClusterECALEndcap")
+process.h2ganalyzer.EndcapBasicClusterShapeColl = cms.InputTag("particleFlowSuperClusterECAL:PFClusterAssociationEBEE")
+
+process.h2ganalyzer.BarrelHybridClusterColl = cms.InputTag("particleFlowSuperClusterECAL:particleFlowBasicClusterECALBarrel")
+process.h2ganalyzer.BarrelHybridClusterShapeColl = cms.InputTag("particleFlowSuperClusterECAL:PFClusterAssociationEBEE")
+
+process.h2ganalyzer.EndcapSuperClusterColl = cms.InputTag("particleFlowSuperClusterECAL:particleFlowSuperClusterECALEndcapWithPreshower")
+process.h2ganalyzer.HybridSuperClusterColl = cms.InputTag("particleFlowSuperClusterECAL:particleFlowSuperClusterECALBarrel")
+   
