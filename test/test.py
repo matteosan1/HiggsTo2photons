@@ -62,7 +62,7 @@ process.options = cms.untracked.PSet(
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(30))
 
 process.dummySelector = cms.EDFilter("CandViewCountFilter",
                                      src = cms.InputTag("gsfElectrons"),
@@ -117,10 +117,31 @@ process.eventCounters = cms.Sequence(process.processedEvents)
 process.h2ganalyzer.globalCounters.extend(['processedEvents']) 
 process.h2ganalyzerPath = cms.Sequence(process.h2ganalyzer)
 
+
+# ----------------------------------------------------------------------
+# plugins for JetFlavour
+# ----------------------------------------------------------------------
+process.myPartons = cms.EDProducer("PartonSelector",
+    src = cms.InputTag("genParticles"),
+    withLeptons = cms.bool(False)
+)
+
+process.flavourByRef = cms.EDProducer("JetPartonMatcher",
+    jets = cms.InputTag("ak5GenJets"),
+    coneSizeToAssociate = cms.double(0.3),
+    partons = cms.InputTag("myPartons")
+)
+
+process.flavourByVal = cms.EDProducer("JetFlavourIdentifier",
+    srcByReference = cms.InputTag("flavourByRef"),
+    physicsDefinition = cms.bool(False)
+)
+
+
 #################################################
 # Define path, first for AOD case then for RECO #
 #################################################
-process.p11 = cms.Path(process.eventCounters*process.eventFilter1*process.particleFlowTmpPtrs*process.pfNoPileUpSequence*process.calibratedElectronsSequence)
+process.p11 = cms.Path(process.eventCounters*process.eventFilter1*process.particleFlowTmpPtrs*process.pfNoPileUpSequence*process.calibratedElectronsSequence*process.myPartons*process.flavourByRef*process.flavourByVal)
 process.p11 *= (process.rechitTimeFilter*process.h2ganalyzerPath)
 
 process.p12 = copy.deepcopy(process.p11)
@@ -184,7 +205,7 @@ process.h2ganalyzer.doJet_algo3 = False
 process.h2ganalyzer.doJet_algoPF1 = False
 process.h2ganalyzer.doJet_algoPF2 = False
 process.h2ganalyzer.doJet_algoPF3 = False
-process.h2ganalyzer.doGenJet_algo1 = True
+process.h2ganalyzer.doGenJet_algo1 = False
 process.h2ganalyzer.doGenJet_algo2 = False
 process.h2ganalyzer.doGenJet_algo3 = False
 process.h2ganalyzer.doGsfTracks = False

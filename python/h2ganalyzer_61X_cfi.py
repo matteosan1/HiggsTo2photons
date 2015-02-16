@@ -39,6 +39,7 @@ h2ganalyzer = cms.EDAnalyzer(
     # COLLECTIONS
     GeneratorColl = cms.InputTag("generator"),
     GenParticlesColl = cms.InputTag("genParticles"),
+    JetFlavorColl = cms.InputTag("flavourByVal"),
     GlobeReducedGendRMin = cms.double(0.3),
     
     pileupInfoCollection = cms.InputTag("addPileupInfo"),
