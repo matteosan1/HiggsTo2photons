@@ -1,10 +1,18 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/GlobeGenParticles.h"
 #include "HiggsAnalysis/HiggsTo2photons/plugins/GlobeAnalyzer.h"
+
+#include "SimDataFormats/JetMatching/interface/JetFlavour.h"
+#include "SimDataFormats/JetMatching/interface/JetFlavourMatching.h"
+#include "SimDataFormats/JetMatching/interface/MatchedPartons.h"
+#include "SimDataFormats/JetMatching/interface/JetMatchedPartons.h"
+
 #include <iostream>
 
 GlobeGenParticles::GlobeGenParticles(const edm::ParameterSet& iConfig) {
   
   genParticlesColl = iConfig.getParameter<edm::InputTag>("GenParticlesColl");
+  jetFlavorColl = iConfig.getParameter<edm::InputTag>("JetFlavorColl");
+  photonColl = iConfig.getParameter<edm::InputTag>("PhotonCollStd");
   debug_level = iConfig.getParameter<int>("Debug_Level");
   gCUT = new GlobeCuts(iConfig);
 }
@@ -23,6 +31,8 @@ void GlobeGenParticles::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("gp_status", gp_status, "gp_status[gp_n]/S");
   ana->Branch("gp_pdgid", gp_pdgid, "gp_pdgid[gp_n]/S");
   ana->Branch("gp_mother", gp_mother, "gp_mother[gp_n]/S");
+
+  ana->Branch("pho_flavor", flavor, "pho_flavor[pho_n]/F");
 }
 
 bool GlobeGenParticles::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -75,6 +85,33 @@ bool GlobeGenParticles::analyze(const edm::Event& iEvent, const edm::EventSetup&
     
     gp_n++;
   }
+
+  edm::Handle<reco::PhotonCollection> fakePhotonH;
+  iEvent.getByLabel(photonColl, fakePhotonH);
   
+  edm::Handle<reco::JetFlavourMatchingCollection> theTagByValue;
+  iEvent.getByLabel (jetFlavorColl, theTagByValue);
+  
+  for (unsigned int p=0; p<fakePhotonH->size(); p++) {
+    reco::PhotonRef fakePhoton(fakePhotonH, p);
+    flavor[p] = -1;
+
+    std::vector< const reco::Candidate * > constituents;	
+    for (reco::JetFlavourMatchingCollection::const_iterator j  = theTagByValue->begin(); j != theTagByValue->end(); j++) {
+      edm::RefToBase<reco::Jet> aJet  = (*j).first; //jet  
+      const reco::JetFlavour aFlav = (*j).second; //flavour
+      constituents = aJet->getJetConstituentsQuick();
+      for(unsigned int i=0;i<constituents.size();i++) {
+	if(constituents.at(i)->eta() == fakePhoton->eta()) { 
+	  //the fake photon is contained in this jet
+	  if(aFlav.getFlavour()==21) 
+	    flavor[p] = 1;
+	  if(fabs(aFlav.getFlavour())<6) 
+	    flavor[p] = 2;
+	}
+      }
+    }
+  }
+
   return true;
 }

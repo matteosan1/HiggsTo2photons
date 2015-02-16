@@ -13,7 +13,7 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
 
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
+//#include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 
 #include <vector>
 #include <algorithm>
@@ -116,12 +116,13 @@ bool GlobeEcalClusters::analyze(const edm::Event& iEvent, const edm::EventSetup&
   barrelRecHits = pEBRecHitH.product();
   endcapRecHits = pEERecHitH.product();
 
-  edm::ESHandle<CaloTopology> theCaloTopo;
-  edm::ESHandle<CaloTopology> pTopology;
-  iSetup.get<CaloTopologyRecord>().get(theCaloTopo);
-  topology = theCaloTopo.product();
- 
-  // get collections
+  EcalClusterLazyTools lazyTool(iEvent, iSetup, ecalHitEBColl, ecalHitEEColl);   
+
+  //edm::ESHandle<CaloTopology> theCaloTopo;
+  //edm::ESHandle<CaloTopology> pTopology;
+  //iSetup.get<CaloTopologyRecord>().get(theCaloTopo);
+  //topology = theCaloTopo.product();
+
   iEvent.getByLabel(hybridSuperClusterColl,superClustersHybridH);
   iEvent.getByLabel(endcapSuperClusterColl, superClustersEndcapH);
 
@@ -154,8 +155,8 @@ bool GlobeEcalClusters::analyze(const edm::Event& iEvent, const edm::EventSetup&
   bc_n = 0;  
   sc_n = 0;
   
-  analyzeSuperClusters(superClustersHybridH, hybridClustersBarrelH, true, 1);
-  analyzeSuperClusters(superClustersEndcapH, basicClustersEndcapH, false, 2);
+  analyzeSuperClusters(superClustersHybridH, hybridClustersBarrelH, lazyTool, true, 1);
+  analyzeSuperClusters(superClustersEndcapH, basicClustersEndcapH, lazyTool, false, 2);
 
   //----------------------------------------  
   // analyze basic clusters 
@@ -167,7 +168,7 @@ bool GlobeEcalClusters::analyze(const edm::Event& iEvent, const edm::EventSetup&
   return true;
 }
 
-void GlobeEcalClusters::analyzeSuperClusters(edm::Handle<reco::SuperClusterCollection> scH, edm::Handle<reco::BasicClusterCollection> bcH, bool isBarrel, int type) {
+void GlobeEcalClusters::analyzeSuperClusters(edm::Handle<reco::SuperClusterCollection> scH, edm::Handle<reco::BasicClusterCollection> bcH, EcalClusterLazyTools& ecalTools, bool isBarrel, int type) {
 
   for(unsigned int i=0; i<scH->size(); i++) {
     
@@ -184,7 +185,7 @@ void GlobeEcalClusters::analyzeSuperClusters(edm::Handle<reco::SuperClusterColle
       reco::BasicClusterRef basic(bcH, j);
       if (&(*sc->seed()) == &(*basic)) {
 	sc_bcseedind[sc_n] = bc_n;
-	fillBasicCluster(basic, type);
+	fillBasicCluster(basic, ecalTools, type);
         break;
       }
     }
@@ -220,7 +221,7 @@ void GlobeEcalClusters::analyzeSuperClusters(edm::Handle<reco::SuperClusterColle
 
     // SC r9
     if (sc->rawEnergy()>0) 
-      sc_r9[sc_n] = EcalClusterTools::e3x3(*(sc->seed()), &(*barrelRecHits), &(*topology)) / sc->rawEnergy();
+      sc_r9[sc_n] = ecalTools.e3x3(*(sc->seed()));//, &(*barrelRecHits), &(*topology)) / sc->rawEnergy();
     else 
       sc_r9[sc_n] = -1;
 
@@ -243,7 +244,7 @@ void GlobeEcalClusters::analyzeSuperClusters(edm::Handle<reco::SuperClusterColle
           reco::BasicClusterRef basic(bcH, j);
           if (&(**itClus) == &(*basic)) {
 	    sc_bcind[sc_n][limit] = bc_n;
-	    fillBasicCluster(basic, isBarrel);	    
+	    fillBasicCluster(basic, ecalTools, isBarrel);	    
             break;
           }
         }
@@ -264,7 +265,7 @@ void GlobeEcalClusters::analyzeSuperClusters(edm::Handle<reco::SuperClusterColle
   }
 }
 
-void GlobeEcalClusters::fillBasicCluster(reco::BasicClusterRef bc, int type) {
+void GlobeEcalClusters::fillBasicCluster(reco::BasicClusterRef bc, EcalClusterLazyTools& ecalTools, int type) {
   
   if(bc_n >= MAX_BASICCLUSTERS) {
     std::cout << "GlobeEcalCluster: WARNING too many basicclusters. " << MAX_BASICCLUSTERS << " allowed. (Missing SEED Cluster)" << std::endl;
@@ -289,20 +290,20 @@ void GlobeEcalClusters::fillBasicCluster(reco::BasicClusterRef bc, int type) {
 
   // fill the rechits associated to the basic cluster
   fillBasicClusterRecHits(hits);
-
-  bc_s1[bc_n] = EcalClusterTools::eMax(*(bc), &(*endcapRecHits)); 
-  bc_s4[bc_n] = EcalClusterTools::e2x2(*(bc), &(*endcapRecHits), &(*topology)); 
-  bc_s9[bc_n] = EcalClusterTools::e3x3(*(bc), &(*endcapRecHits), &(*topology)); 
-  bc_s25[bc_n] = EcalClusterTools::e5x5(*(bc), &(*endcapRecHits), &(*topology)); 
   
-  std::vector<float> rook_vect;
-  rook_vect.push_back(EcalClusterTools::eLeft(*(bc), &(*endcapRecHits), &(*topology)));
-  rook_vect.push_back(EcalClusterTools::eTop(*(bc), &(*endcapRecHits), &(*topology)));
-  rook_vect.push_back(EcalClusterTools::eBottom(*(bc), &(*endcapRecHits), &(*topology)));
-  rook_vect.push_back(EcalClusterTools::eRight(*(bc), &(*endcapRecHits), &(*topology)));
-  bc_chx[bc_n] = std::accumulate(rook_vect.begin(), rook_vect.end(), 0.);
+  bc_s1[bc_n]  = ecalTools.eMax(*(bc));//, &(*endcapRecHits)); 
+  bc_s4[bc_n]  = ecalTools.e2x2(*(bc));//, &(*endcapRecHits), &(*topology)); 
+  bc_s9[bc_n]  = ecalTools.e3x3(*(bc));//, &(*endcapRecHits), &(*topology)); 
+  bc_s25[bc_n] = ecalTools.e5x5(*(bc));//, &(*endcapRecHits), &(*topology)); 
   
-  std::vector<float> vCov = EcalClusterTools::localCovariances( *(bc), &(*endcapRecHits), &(*topology));
+  //std::vector<float> rook_vect;
+  //rook_vect.push_back(ecalTools.eLeft(*(bc)));//, &(*endcapRecHits), &(*topology)));
+  //rook_vect.push_back(ecalTools.eTop(*(bc)));//, &(*endcapRecHits), &(*topology)));
+  //rook_vect.push_back(ecalTools.eBottom(*(bc)));//, &(*endcapRecHits), &(*topology)));
+  //rook_vect.push_back(ecalTools.eRight(*(bc)));//, &(*endcapRecHits), &(*topology)));
+  bc_chx[bc_n] = 0;//std::accumulate(rook_vect.begin(), rook_vect.end(), 0.);
+  
+  std::vector<float> vCov = ecalTools.localCovariances(*(bc));//, &(*endcapRecHits), &(*topology));
   bc_sieie[bc_n] = sqrt(vCov[0]);
   bc_sieip[bc_n] = vCov[1];
   bc_sipip[bc_n] = sqrt(vCov[2]);
@@ -311,7 +312,7 @@ void GlobeEcalClusters::fillBasicCluster(reco::BasicClusterRef bc, int type) {
   bc_n++;
 }
 
-void GlobeEcalClusters::analyzeBasicClusters(edm::Handle<reco::BasicClusterCollection> bcH, int type) { 
+void GlobeEcalClusters::analyzeBasicClusters(edm::Handle<reco::BasicClusterCollection> bcH, EcalClusterLazyTools& ecalTools, int type) { 
 
   if (barrelBasicClusterColl.encode() != "") {
     
@@ -323,7 +324,7 @@ void GlobeEcalClusters::analyzeBasicClusters(edm::Handle<reco::BasicClusterColle
       }
       
       reco::BasicClusterRef bc(bcH, i);
-      fillBasicCluster(bc, type);
+      fillBasicCluster(bc, ecalTools, type);
     }
   }
 }

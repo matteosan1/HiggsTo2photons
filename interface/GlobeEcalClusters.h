@@ -30,6 +30,8 @@
 #include "Geometry/EcalAlgo/interface/EcalPreshowerGeometry.h"
 #include "RecoCaloTools/Navigation/interface/EcalPreshowerNavigator.h"
 
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterFunctionBaseClass.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterFunctionFactory.h"
 
@@ -49,9 +51,9 @@ class GlobeEcalClusters {
   bool analyze(const edm::Event&, const edm::EventSetup&);
 
 protected:
-  void analyzeSuperClusters(edm::Handle<reco::SuperClusterCollection> scH, edm::Handle<reco::BasicClusterCollection> bcH, bool isBarrel, int type);
-  void analyzeBasicClusters(edm::Handle<reco::BasicClusterCollection> bcH, int type);
-  void fillBasicCluster(reco::BasicClusterRef bc, int type);
+  void analyzeSuperClusters(edm::Handle<reco::SuperClusterCollection> scH, edm::Handle<reco::BasicClusterCollection> bcH,EcalClusterLazyTools& ecalTools,  bool isBarrel, int type);
+  void analyzeBasicClusters(edm::Handle<reco::BasicClusterCollection> bcH, EcalClusterLazyTools& ecalTools, int type);
+  void fillBasicCluster(reco::BasicClusterRef bc, EcalClusterLazyTools& ecalTools, int type);
 
 public:
 
