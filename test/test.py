@@ -62,7 +62,7 @@ process.options = cms.untracked.PSet(
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(30))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(50))
 
 process.dummySelector = cms.EDFilter("CandViewCountFilter",
                                      src = cms.InputTag("gsfElectrons"),

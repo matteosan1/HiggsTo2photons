@@ -25,6 +25,7 @@
 #include "TFile.h"
 #include <cstdlib>
 
+#include "RecoEcal/EgammaCoreTools/interface/MyClusterTools.h"
 
 void GlobePhotons::checkSetup(const edm::EventSetup& iSetup) {
 
@@ -197,12 +198,28 @@ void GlobePhotons::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("pho_r1x5", &pho_r1x5, "pho_r1x5[pho_n]/F");
   ana->Branch("pho_r2x5", &pho_r2x5, "pho_r2x5[pho_n]/F");
   ana->Branch("pho_r9", &pho_r9,"pho_r9[pho_n]/F");
-  
+  ana->Branch("pho_smaj", &pho_smaj, "pho_smaj[pho_n]/F");
+  ana->Branch("pho_alpha", &pho_alpha, "pho_alpha[pho_n]/F");
+  ana->Branch("pho_smin", &pho_smin, "pho_smin[pho_n]/F");
+
   ana->Branch("pho_r9_cleaned", &pho_r9_cleaned,"pho_r9_cleaned[pho_n]/F");
   ana->Branch("pho_sieie_cleaned",&pho_sieie_cleaned,"pho_sieie_cleaned[pho_n]/F");
   ana->Branch("pho_sieip_cleaned",&pho_sieip_cleaned,"pho_sieip_cleaned[pho_n]/F");
   ana->Branch("pho_e2x2_cleaned",&pho_e2x2_cleaned,"pho_e2x2_cleaned[pho_n]/F");
   ana->Branch("pho_e5x5_cleaned",&pho_e5x5_cleaned,"pho_e5x5_cleaned[pho_n]/F");
+
+  ana->Branch("pho_r9_frac", &pho_r9_frac,"pho_r9_frac[pho_n]/F");
+  ana->Branch("pho_sieie_frac",&pho_sieie_frac,"pho_sieie_frac[pho_n]/F");
+  ana->Branch("pho_sieip_frac",&pho_sieip_frac,"pho_sieip_frac[pho_n]/F");
+  ana->Branch("pho_sipip_frac",&pho_sipip_frac,"pho_sipip_frac[pho_n]/F");
+  ana->Branch("pho_e2x2_frac",&pho_e2x2_frac,"pho_e2x2_frac[pho_n]/F");
+  ana->Branch("pho_e5x5_frac",&pho_e5x5_frac,"pho_e5x5_frac[pho_n]/F");
+  ana->Branch("pho_e3x3_frac",&pho_e3x3_frac,"pho_e3x3_frac[pho_n]/F");
+  ana->Branch("pho_smaj_frac", &pho_smaj_frac, "pho_smaj_frac[pho_n]/F");
+  ana->Branch("pho_alpha_frac", &pho_alpha_frac, "pho_alpha_frac[pho_n]/F");
+  ana->Branch("pho_smin_frac", &pho_smin_frac, "pho_smin_frac[pho_n]/F");
+
+
   
   ana->Branch("pho_eseffsixix",&pho_eseffsixix,"pho_eseffsixix[pho_n]/F");
   ana->Branch("pho_eseffsiyiy",&pho_eseffsiyiy,"pho_eseffsiyiy[pho_n]/F");
@@ -218,7 +235,7 @@ void GlobePhotons::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("pho_lambdadivcov_global", &pho_lambdadivcov_global, "pho_lambdadivcov_global[pho_n]/F");
   ana->Branch("pho_etawidth", &pho_etawidth, "pho_etawidth[pho_n]/F");
   ana->Branch("pho_brem", &pho_brem, "pho_brem[pho_n]/F");
-  ana->Branch("pho_smaj", &pho_smaj, "pho_smaj[pho_n]/F");
+
 
   //isolation variables
 
@@ -450,10 +467,6 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     }
   }
   
-  //std::vector<reco::TransientTrack> t_outInTrk;
-  //if (!doFastSim)
-  // t_outInTrk = ( *theTTkBuilder).build(outInTrkHandle );
-
   edm::Handle<reco::BeamSpot> bsHandle;
   iEvent.getByLabel(beamSpotColl, bsHandle);
   const reco::BeamSpot &thebs = *bsHandle.product();
@@ -472,13 +485,16 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iSetup.get<CaloGeometryRecord>().get(geoHandle);
   const CaloGeometry& geometry = *geoHandle;
 
+  const CaloTopology *topology;
+  edm::ESHandle<CaloTopology> pTopology;
+  iSetup.get<CaloTopologyRecord>().get(pTopology);
+  topology = pTopology.product();
+  
   const CaloSubdetectorGeometry *geometryES = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalPreshower);
   CaloSubdetectorTopology *topology_p = 0;
   if (geometryES) 
     topology_p = new EcalPreshowerTopology(geoHandle);
-  //const CaloSubdetectorGeometry* geomBar_=geoHandle->getSubdetectorGeometry(DetId::Ecal,1);
-  //const CaloSubdetectorGeometry* geomEnd_=geoHandle->getSubdetectorGeometry(DetId::Ecal,2);
-   
+     
   // FOR PF ISOLATION
   edm::Handle<reco::PFCandidateCollection> pfCollection;
   iEvent.getByLabel(pfColl, pfCollection);
@@ -555,124 +571,18 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     reco::SuperClusterRef theClus = localPho->superCluster();
 
     std::vector<UInt_t> schits,bchits;
-
-    // FIXME
-    //for (reco::CaloCluster_iterator clusterIt=theClus->clustersBegin(); clusterIt!=theClus->clustersEnd(); clusterIt++) {
-    //  for (unsigned int j=0; j<theClus->hitsAndFractions().size(); j++)
-    //	schits.push_back((theClus->hitsAndFractions())[j].first);
-    //  pho_schits->push_back(schits);
-    //}
-    //
-    //for (unsigned int j=0; j<theClus->seed()->hitsAndFractions().size(); j++)
-    //  bchits.push_back((theClus->seed()->hitsAndFractions())[j].first);
-    //pho_bchits->push_back(bchits);
-
     pho_scind[pho_n] = -1;
 
     //PF info
     pho_isPFPhoton[pho_n] = 0;
     pho_isPFElectron[pho_n] = 0;
-    // FIXME
-    //\//Find PFPhoton
-    //\unsigned int iphot=9999;
-    //\for(unsigned int i=0; i<pfCollection->size(); ++i ) {
-    //\  if ((*pfCollection)[i].particleId()==reco::PFCandidate::gamma){
-    //\    if ((*pfCollection)[i].mva_nothing_gamma()>0){
-    //\      if( (*pfCollection)[i].superClusterRef()==localPho->superCluster())  iphot = i;
-    //\    }
-    //\  }
-    //\}
-    //\if (iphot!=9999) pho_isPFPhoton[pho_n] = 1;
-    //\//Find PFElectron
-    //\bool foundEgSC = false;
-    //\unsigned int iel = 9999;
-    //\reco::GsfElectronCollection::const_iterator elIterSl;
-    //\for (reco::GsfElectronCollection::const_iterator elIter = hElectrons->begin(); elIter != hElectrons->end(); ++elIter){
-    //\   if (localPho->superCluster()==elIter->superCluster()) {
-    //\     elIterSl = elIter;
-    //\     foundEgSC = true;
-    //\   }
-    //\   if (foundEgSC){
-    //\     int iid = 0;
-    //\     //double MVACut_ = -0.1; //42X
-    //\     double MVACut_ = -1.; //44X
-    //\     for(unsigned int i=0; i<pfCollection->size(); ++i ) {
-    //\       if ((*pfCollection)[i].particleId()==reco::PFCandidate::e && (*pfCollection)[i].gsfTrackRef().isNull()==false && (*pfCollection)[i].mva_e_pi()>MVACut_ && (*pfCollection)[i].gsfTrackRef()==elIterSl->gsfTrack()){
-    //\         iel = i;
-    //\         iid++;
-    //\       }
-    //\     }
-    //\   }
-    //\}
-    //\if (iel!=9999) pho_isPFElectron[pho_n]=1;
 
-    // PHOTON ID
-    //for (unsigned int iv=0; iv<hVertex->size(); iv++) {
-    //  pho_id_4cat[pho_n][iv] = cicPhotonId->photonCutLevel4cat(localPho, iv);
-    //  pho_id_6cat[pho_n][iv] = cicPhotonId->photonCutLevel6cat(localPho, iv);
-    //  pho_id_6catpf[pho_n][iv] = cicPhotonId->photonCutLevel6catPF(localPho, iv);
-    //}
-
-    // Residual corrections
-    //PhotonFix ResidCorrector(*localPho);
     pho_residCorrEnergy[pho_n] = 0;//ResidCorrector.fixedEnergy();
     pho_residCorrResn[pho_n] = 0;//ResidCorrector.sigmaEnergy();
 
-    // FIXME
-    // Regression Correction
-    //if (!ecorr_.IsInitialized()) {
-    //  if (energyCorrectionsFromDB and regressionVersion == "V3") {
-    //	std::cout << "DB version available only for V2" << std::endl;
-    //	energyCorrectionsFromDB = false;
-    //  }
-    //  
-    //  if (!energyCorrectionsFromDB) {
-    //	char filename[500];
-    //	char* descr = getenv("CMSSW_BASE");
-    //	sprintf(filename, "%s/src/HiggsAnalysis/HiggsTo2photons/data/%s", descr, energyRegFilename.c_str());
-    //	if (fexist(filename)) {
-    //	  sprintf(filename, "http://cern.ch/sani/%s", energyRegFilename.c_str());
-    //	  ecorr_.Initialize(iSetup, filename);
-    //	} else {
-    //	  ecorr_.Initialize(iSetup, filename);
-    //	} 
-    //  } else {
-    //	ecorr_.Initialize(iSetup, "wgbrph", true);
-    //  }
-    //}
-    //
-    //if (!isInitialized) {
-    //  isInitialized = true;
-    //  //do the same for PFEcal Cluster corrections:
-    //  char filename1[200];
-    //  char filename2[200];
-    //  sprintf(filename1, "http://cern.ch/sani/TMVARegressionBarrelLC.root");
-    //  sprintf(filename2, "http://cern.ch/sani/TMVARegressionEndCapLC.root");
-    //  TFile *fgbr1 = TFile::Open(filename1);
-    //  TFile *fgbr2 = TFile::Open(filename2);
-    //  PFLCBarrel = (GBRForest*)fgbr1->Get("PFLCorrEB");
-    //  PFLCEndcap = (GBRForest*)fgbr2->Get("PFLCorrEE");
-    //}
-
     EcalClusterLazyTools lazyTool(iEvent, iSetup, ecalHitEBColl, ecalHitEEColl);   
     EcalClusterLazyTools lazyToolCleaned(iEvent, iSetup, ecalHitEBCleanedColl, ecalHitEECleanedColl);   
-    
-    // FIXME
-    //if (regressionVersion == "V3") {
-    //  std::pair<double,double> cor;
-    //  //if (iEvent.isRealData()) 
-    //  //	cor = ecorr_.CorrectedEnergyWithErrorV3(*localPho, *hVertex, rho, lazyTool, iSetup);
-    //  //else
-    //  //	cor = ecorr_.CorrectedEnergyWithErrorV3(*localPho, *hVertex, rho, lazyTool, iSetup, true);
-    //  //
-    //  pho_regr_energy[pho_n]    = 0;//cor.first;
-    //  pho_regr_energyerr[pho_n] = 0;//cor.second;
-    //} else {
-    //  std::pair<double,double> cor = ecorr_.CorrectedEnergyWithError(*localPho, *hVertex, lazyTool, iSetup);
-    //  pho_regr_energy[pho_n]    = cor.first;
-    //  pho_regr_energyerr[pho_n] = cor.second;
-    //}
-
+   
     pho_sc_time[pho_n] = lazyTool.SuperClusterTime(*theClus, iEvent);
 	
     int index = 0;
@@ -718,33 +628,12 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     bool isBarrel=(id.subdetId() == EcalBarrel);
     pho_barrel[pho_n]=(Int_t)isBarrel;
 
-    // FIXME
-    // Correction Schemes,
-    //for (int corr_iter=1;corr_iter<=5;corr_iter++) 
-    //  pho_feta[pho_n][corr_iter] = fEtaCorr->getValue(*(localPho->superCluster()),corr_iter);
-    // 
-    //pho_crackcorr[pho_n] = CrackCorr->getValue(*(localPho->superCluster()));
-    //if (isBarrel) pho_localcorr[pho_n] = LocalCorr->getValue(*(localPho->superCluster()),0);
-    //else pho_localcorr[pho_n] = 1.;
-
     // Rech-Hits related
      edm::Handle<EcalRecHitCollection> prechits;
     iEvent.getByLabel( (localPho->isEB() ? ecalHitEBColl : ecalHitEEColl) ,prechits);
 
     edm::Handle<EcalRecHitCollection> ESRecHits;
     iEvent.getByLabel(ecalHitESColl , ESRecHits);
-
-    // FIXME
-    //rechits_map_.clear();
-    //if (ESRecHits.isValid()) {
-    //  EcalRecHitCollection::const_iterator it;
-    //  for (it = ESRecHits->begin(); it != ESRecHits->end(); ++it) {
-    //    // remove bad ES rechits
-    //    if (it->recoFlag()==1 || it->recoFlag()==14 || (it->recoFlag()<=10 && it->recoFlag()>=5)) continue;
-    //    //Make the map of DetID, EcalRecHit pairs
-    //    rechits_map_.insert(std::make_pair(it->id(), *it));
-    //  }
-    //}
 
     const reco::CaloClusterPtr  seed_clu = localPho->superCluster()->seed();
     EcalRecHitCollection::const_iterator seedcry_rh = prechits->find(id);
@@ -760,20 +649,43 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_isEEDeeGap[pho_n] = localPho->isEEDeeGap();
     pho_isEERingGap[pho_n] = localPho->isEERingGap();
     
+    
+
     //shower shape variables
     pho_see[pho_n] = localPho->sigmaEtaEta();
-    pho_sieie[pho_n] = localPho->sigmaIetaIeta();
-
-    pho_sieie_cleaned[pho_n] = sqrt(lazyToolCleaned.localCovariances(*seed_clu)[0]);
-    pho_sieip_cleaned[pho_n] = lazyToolCleaned.localCovariances(*seed_clu)[1];
+    std::vector<float> etaphimomentsnoZS = myClusterTools::noZSEcalClusterTools::localCovariances(*localPho->superCluster()->seed(), &(*prechits), &(*topology));
+    pho_sieie[pho_n] = sqrt(etaphimomentsnoZS[0]);
+    pho_sieip[pho_n] = etaphimomentsnoZS[1];
+    pho_sipip[pho_n] = sqrt(etaphimomentsnoZS[2]);
+    pho_e3x3[pho_n] = myClusterTools::noZSEcalClusterTools::e3x3(*localPho->superCluster()->seed(), &(*prechits), &(*topology));
+    pho_e5x5[pho_n] = myClusterTools::noZSEcalClusterTools::e5x5(*localPho->superCluster()->seed(), &(*prechits), &(*topology));
+    pho_r9[pho_n] =  pho_e3x3[pho_n]/localPho->superCluster()->rawEnergy();
+    myClusterTools::Cluster2ndMoments momentsNoZS = myClusterTools::noZSEcalClusterTools::cluster2ndMoments(*localPho->superCluster()->seed(), *prechits);
+    pho_smaj[pho_n] = momentsNoZS.sMaj;
+    pho_smin[pho_n] = momentsNoZS.sMin;
+    pho_alpha[pho_n] = momentsNoZS.alpha;
     
+    std::vector<float> etaphimoments = myClusterTools::EcalClusterTools::localCovariances(*localPho->superCluster()->seed(), &(*prechits), &(*topology));
+    pho_sieie_frac[pho_n] = sqrt(etaphimoments[0]);
+    pho_sieip_frac[pho_n] = etaphimoments[1];
+    pho_sipip_frac[pho_n] = sqrt(etaphimoments[2]);
+    pho_e3x3_frac[pho_n] = myClusterTools::EcalClusterTools::e3x3(*localPho->superCluster()->seed(), &(*prechits), &(*topology));
+    pho_e5x5_frac[pho_n] = myClusterTools::EcalClusterTools::e5x5(*localPho->superCluster()->seed(), &(*prechits), &(*topology));
+    pho_r9_frac[pho_n] =  pho_e3x3_frac[pho_n]/localPho->superCluster()->rawEnergy();
+    myClusterTools::Cluster2ndMoments moments = myClusterTools::EcalClusterTools::cluster2ndMoments(*localPho->superCluster()->seed(), *prechits);
+    pho_smaj_frac[pho_n] = moments.sMaj;
+    pho_smin_frac[pho_n] = moments.sMin;
+    pho_alpha_frac[pho_n] = moments.alpha;
+        
+
+    pho_r9_cleaned[pho_n] = lazyToolCleaned.e3x3(*seed_clu)/localPho->superCluster()->rawEnergy();
     pho_e1x5[pho_n] = localPho->e1x5();
     pho_e2x2[pho_n] = lazyTool.e2x2(*seed_clu);
-    pho_e2x2_cleaned[pho_n] = lazyToolCleaned.e2x2(*seed_clu);
     pho_e1x3[pho_n] = lazyTool.e1x3(*seed_clu);
-    pho_e3x3[pho_n] = localPho->e3x3();
-    pho_e5x5[pho_n] = localPho->e5x5();
+    pho_e2x2_cleaned[pho_n] = lazyToolCleaned.e2x2(*seed_clu);
     pho_e5x5_cleaned[pho_n] = lazyToolCleaned.e5x5(*seed_clu);
+    pho_sieie_cleaned[pho_n] = sqrt(lazyToolCleaned.localCovariances(*seed_clu)[0]);
+    pho_sieip_cleaned[pho_n] = lazyToolCleaned.localCovariances(*seed_clu)[1];
     pho_emaxxtal[pho_n] = localPho->maxEnergyXtal();
     pho_hoe[pho_n] = localPho->hadronicOverEm();
     pho_h1oe[pho_n] = localPho->hadronicDepth1OverEm();
@@ -798,8 +710,6 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     pho_r1x5[pho_n] = localPho->r1x5();
     pho_r2x5[pho_n] = localPho->r2x5();
-    pho_r9[pho_n] = localPho->r9();
-    pho_r9_cleaned[pho_n] = lazyToolCleaned.e3x3(*seed_clu)/localPho->superCluster()->rawEnergy();
 
     pho_must[pho_n] = -9999.;
     pho_mustnc[pho_n] = -1;
@@ -845,103 +755,6 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_pfe2nd[pho_n] = -9999.;
     
     pho_pfRawEnergy[pho_n] = 0;
-    
-    EcalClusterLazyTools pflazyTool(iEvent, iSetup, ecalHitEBColl, ecalHitEEColl);
-    
-
-    //if(ggPFPhoton.MatchPFReco()){
-    //  std::pair<float, float>VertexZ=ggPFPhoton.SLPoint();
-    //  pho_pfconvVtxZ[pho_n] = VertexZ.first;
-    //  pho_pfconvVtxZErr[pho_n] = VertexZ.second;
-    //  pho_pfMatch[pho_n]=1;
-    //  //check Ele Veto (Conv Safe):
-    //  if(ggPFPhoton.PFElectronVeto(hConversions, hElectrons))pho_PfEleVeto[pho_n]=1;
-    //  else pho_PfEleVeto[pho_n]=0;
-    //  if(ggPFPhoton.isConv()){
-    //	pho_hasConvPf[pho_n] = 1;
-    //  }
-    //  else pho_hasConvPf[pho_n] = 0;
-    //  
-    //  if(ggPFPhoton.hasSLConv()){
-    //	pho_hasSLConvPf[pho_n] = 1;
-    //  }
-    //  else pho_hasSLConvPf[pho_n] = 0;
-    //  
-    //  ggPFPhoton.fillPFClusters();
-    //  pho_pfpresh1[pho_n] = ggPFPhoton.PFPS1();
-    //  pho_pfpresh2[pho_n] = ggPFPhoton.PFPS2();
-    //  pho_must[pho_n] = ggPFPhoton.MustEtOut();
-    //  pho_mustenergy[pho_n] = ggPFPhoton.MustE();
-    //  pho_mustenergyout[pho_n] = ggPFPhoton.MustEOut();
-    //  pho_mustEtout[pho_n]=ggPFPhoton.MustEtOut();
-    //  pho_pflowE[pho_n] = ggPFPhoton.PFLowE();
-    //  pho_pfdeta[pho_n] = ggPFPhoton.PFdEta();
-    //  pho_pfdphi[pho_n] = ggPFPhoton.PFdPhi();
-    //  pho_pfclusrms[pho_n] = ggPFPhoton.PFClusRMSTot();
-    //  pho_pfclusrmsmust[pho_n] = ggPFPhoton.PFClusRMSMust();
-    //  std::vector<reco::CaloCluster>PFC=ggPFPhoton.PFClusters();
-    //  pho_pfClusECorr[pho_n]=ggPFPhoton.getPFPhoECorr(PFC, PFLCBarrel, PFLCEndcap);
-    //
-    //  double PFCseedE = 0;
-    //  int ipfseed = -1;
-    //  for (unsigned int i=0; i<PFC.size(); i++){
-    //	pho_pfRawEnergy[pho_n] += PFC[i].energy();
-    //	if (PFC[i].energy()>PFCseedE){
-    //	  PFCseedE = PFC[i].energy();
-    //	  ipfseed = i;
-    //	}
-    //  }
-    //  if (ipfseed!=-1){
-    //	std::vector<float> pfviCov = pflazyTool.localCovariances(PFC[ipfseed]);
-    //	pho_pfsieie[pho_n] = pfviCov[0];
-    //	pho_pfsieip[pho_n] = pfviCov[1];
-    //	pho_pfsipip[pho_n] = pfviCov[2];
-    //	pho_pfe2x2[pho_n] = pflazyTool.e2x2(PFC[ipfseed]);
-    //	pho_pfe3x3[pho_n] = pflazyTool.e3x3(PFC[ipfseed]);
-    //	pho_pfe5x5[pho_n] = pflazyTool.e5x5(PFC[ipfseed]);
-    //	pho_pfemaxxtal[pho_n] = pflazyTool.eMax(PFC[ipfseed]);
-    //	pho_pfe2nd[pho_n] = pflazyTool.e2nd(PFC[ipfseed]);
-    //	
-    //  } 
-    //}
-    //else{
-    //  ggPFPhoton.recoPhotonClusterLink(*localPho, pfCollection);
-    //  pho_pfMatch[pho_n]=0;
-    //  pho_pfpresh1[pho_n] = ggPFPhoton.PFPS1();
-    //  pho_pfpresh2[pho_n] = ggPFPhoton.PFPS2();
-    //  pho_must[pho_n] = ggPFPhoton.MustEtOut();
-    //  pho_mustenergy[pho_n] = ggPFPhoton.MustE();
-    //  pho_mustenergyout[pho_n] = ggPFPhoton.MustEOut();
-    //  pho_mustEtout[pho_n]=ggPFPhoton.MustEtOut();
-    //  pho_pflowE[pho_n] = ggPFPhoton.PFLowE();
-    //  pho_pfdeta[pho_n] = ggPFPhoton.PFdEta();
-    //  pho_pfdphi[pho_n] = ggPFPhoton.PFdPhi();
-    //  pho_pfclusrms[pho_n] = ggPFPhoton.PFClusRMSTot();
-    //  pho_pfclusrmsmust[pho_n] = ggPFPhoton.PFClusRMSMust();
-    //
-    //  ggPFClusters ClusterColl(EBReducedRecHits, EEReducedRecHits, geomBar_, geomEnd_);
-    //  std::vector<reco::CaloCluster>PFC=ClusterColl.getPFClusters(*localPho->superCluster());
-    //  double PFCseedE = 0;
-    //  int ipfseed = -1;
-    //  for (unsigned int i=0; i<PFC.size(); i++){
-    //	pho_pfRawEnergy[pho_n] += PFC[i].energy();
-    //	if (PFC[i].energy()>PFCseedE){
-    //	  PFCseedE = PFC[i].energy();
-    //	  ipfseed = i;
-    //	}
-    //  }
-    //  if (ipfseed!=-1){
-    //	std::vector<float> pfviCov = pflazyTool.localCovariances(PFC[ipfseed]);
-    //	pho_pfsieie[pho_n] = pfviCov[0];
-    //	pho_pfsieip[pho_n] = pfviCov[1];
-    //	pho_pfsipip[pho_n] = pfviCov[2];
-    //	pho_pfe2x2[pho_n] = pflazyTool.e2x2(PFC[ipfseed]);
-    //	pho_pfe3x3[pho_n] = pflazyTool.e3x3(PFC[ipfseed]);
-    //	pho_pfe5x5[pho_n] = pflazyTool.e5x5(PFC[ipfseed]);
-    //	pho_pfemaxxtal[pho_n] = pflazyTool.eMax(PFC[ipfseed]);
-    //	pho_pfe2nd[pho_n] = pflazyTool.e2nd(PFC[ipfseed]);	
-    //  } 
-    //}
 
     // more cluster shapes from Lazy Tools
     std::vector<float> viCov;
@@ -949,8 +762,8 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     std::vector<float> cov;
     cov = lazyTool.covariances(*localPho->superCluster());
     
-    pho_sipip[pho_n] = viCov[2];
-    pho_sieip[pho_n] = viCov[1];
+    //pho_sipip[pho_n] = viCov[2];
+    //pho_sieip[pho_n] = viCov[1];
     pho_zernike20[pho_n] = lazyTool.zernike20(*seed_clu);
     pho_zernike42[pho_n] = lazyTool.zernike42(*seed_clu);
     pho_e2nd[pho_n] = lazyTool.e2nd(*seed_clu);
@@ -986,16 +799,13 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_lambdadivcov[pho_n]   = lambdaMinus/viCov[0];
     pho_etawidth[pho_n]       = localPho->superCluster()->etaWidth();
     pho_brem[pho_n]           = localPho->superCluster()->phiWidth()/localPho->superCluster()->etaWidth();
-    Cluster2ndMoments moments = EcalClusterTools::cluster2ndMoments(*seed_clu, *(prechits.product()), 0.8, 4.7, true);
-    pho_smaj[pho_n]           = moments.sMaj; 
-
+    
     // NN variables
     pho_cep_global[pho_n]          = cov[1];
     float lambdaMinus_glo          = (cov[0] + cov[2] - sqrt(pow(cov[0] - cov[2], 2) + 4*pow(cov[1], 2)));
     float lambdaPlus_glo           = (cov[0] + cov[2] + sqrt(pow(cov[0] - cov[2], 2) + 4*pow(cov[1], 2)));
     pho_lambdaratio_global[pho_n]  = lambdaMinus_glo/lambdaPlus_glo;
     pho_lambdadivcov_global[pho_n] = lambdaMinus_glo/cov[0];
-
 
     //spike-ID
     //pho_e2overe9[pho_n] = EcalSeverityLevelAlgo::E2overE9( id, *prechits, 5.0, 0.0);
@@ -1005,68 +815,6 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_seed_outoftimechi2[pho_n] = seedcry_rh != prechits->end() ? seedcry_rh->outOfTimeChi2() : 999.;
     pho_seed_chi2[pho_n] = seedcry_rh != prechits->end() ? seedcry_rh->chi2() : 999.;
     pho_seed_recoflag[pho_n] = seedcry_rh != prechits->end() ? seedcry_rh->recoFlag() : 999.;
-
-    // isolation variables
-    // FIXME
-    std::vector<reco::PFCandidate::ParticleType> temp;
-    temp.push_back(reco::PFCandidate::gamma);
-    //pho_pfiso_myphoton01[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.1, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    //pho_pfiso_myphoton02[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.2, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    //pho_pfiso_myphoton03[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.3, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    //pho_pfiso_myphoton04[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.4, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    //pho_pfiso_myphoton05[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.5, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    //pho_pfiso_myphoton06[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.6, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-
-    /*
-    // Egamma vetoes
-    pho_pfiso_egphoton01[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.1, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_egphoton02[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.2, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_egphoton03[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.3, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_egphoton04[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.4, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_egphoton05[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.5, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_egphoton06[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.6, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-
-    // No Veto 
-    pho_pfiso_barephoton01[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_barephoton02[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_barephoton03[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_barephoton04[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_barephoton05[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    pho_pfiso_barephoton06[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
-    */
-
-    temp.push_back(reco::PFCandidate::h0);
-    // Custom Egamma and noveto are the same
-    //pho_pfiso_myneutral01[pho_n] = cicPhotonId->pfHcalIso(localPho, 0.1, 0.00, reco::PFCandidate::h0);
-    //pho_pfiso_myneutral02[pho_n] = cicPhotonId->pfHcalIso(localPho, 0.2, 0.00, reco::PFCandidate::h0);
-    //pho_pfiso_myneutral03[pho_n] = cicPhotonId->pfHcalIso(localPho, 0.3, 0.00, reco::PFCandidate::h0);
-    //pho_pfiso_myneutral04[pho_n] = cicPhotonId->pfHcalIso(localPho, 0.4, 0.00, reco::PFCandidate::h0);
-    //pho_pfiso_myneutral05[pho_n] = cicPhotonId->pfHcalIso(localPho, 0.5, 0.00, reco::PFCandidate::h0);
-    //pho_pfiso_myneutral06[pho_n] = cicPhotonId->pfHcalIso(localPho, 0.6, 0.00, reco::PFCandidate::h0);
-
-
-    //pho_pfiso_mycharged01->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.1, 0.02, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    //pho_pfiso_mycharged02->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.2, 0.02, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    //pho_pfiso_mycharged03->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.3, 0.02, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    //pho_pfiso_mycharged04->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.4, 0.02, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    //pho_pfiso_mycharged05->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.5, 0.02, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    //pho_pfiso_mycharged06->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.6, 0.02, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-
-    /*
-    pho_pfiso_egcharged01->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.1, 0.1, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_egcharged02->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.2, 0.1, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_egcharged03->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.3, 0.1, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_egcharged04->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.4, 0.1, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_egcharged05->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.5, 0.1, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_egcharged06->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.6, 0.1, 0.02, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-
-    pho_pfiso_barecharged01->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.1, 0.0, 0.0, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_barecharged02->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.2, 0.0, 0.0, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_barecharged03->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.3, 0.0, 0.0, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_barecharged04->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.4, 0.0, 0.0, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_barecharged05->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.5, 0.0, 0.0, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    pho_pfiso_barecharged06->push_back(cicPhotonId->pfTkIsoWithVertex(localPho, 0.6, 0.0, 0.0, 0.0, 0.2, 0.1, reco::PFCandidate::h)); 
-    */  
 
     pho_ecalsumetconedr04[pho_n] = localPho->ecalRecHitSumEtConeDR04();
     pho_hcalsumetconedr04[pho_n] = localPho->hcalTowerSumEtConeDR04();
@@ -1084,13 +832,6 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_trksumpthollowconedr03[pho_n] = localPho->trkSumPtHollowConeDR03();
     pho_ntrksolidconedr03[pho_n] = localPho->nTrkSolidConeDR03();
     pho_ntrkhollowconedr03[pho_n] = localPho->nTrkHollowConeDR03();
-
-    //pho_hcalbcsumetconedr03[MAX_PHOTONS];
-    //pho_hcalbc1sumetconedr03[MAX_PHOTONS];
-    //pho_hcalbc2sumetconedr03[MAX_PHOTONS];
-    //pho_hcalbcsumetconedr04[MAX_PHOTONS];
-    //pho_hcalbc1sumetconedr04[MAX_PHOTONS];
-    //pho_hcalbc2sumetconedr04[MAX_PHOTONS];
 
     bool passelectronveto = !ConversionTools::hasMatchedPromptElectron(localPho->superCluster(), hElectrons, hConversions, thebs.position());
     pho_isconv[pho_n] = int(passelectronveto);
@@ -1126,87 +867,6 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     ((TVector3 *)pho_conv_vtx->At(pho_n))->SetXYZ(-999, -999, -999);
     ((TVector3 *)pho_conv_pair_momentum->At(pho_n))->SetXYZ(-999, -999, -999);
     ((TVector3 *)pho_conv_refitted_momentum->At(pho_n))->SetXYZ(-999, -999, -999);
-
-    //FIXME
-    //if (debug_level>9) std::cout << "Looking For Valid Conversion" << std::endl;
-    //if (localPho->hasConversionTracks()) {
-    //  if (debug_level>9) std::cout << "Has Conversion Tracks" << std::endl;
-    //
-    //  //reco::ConversionRef conv(localPho->conversions(),0);
-    //
-    //  reco::ConversionRefVector conversions = localPho->conversions();
-    //
-    //  reco::ConversionRef conv = conversions[0];
-    //
-    //  if (debug_level>9) std::cout << "Checking Vertex Validity" << std::endl;
-    //  pho_conv_validvtx[pho_n]=conv->conversionVertex().isValid();
-    //
-    //  if (!pho_conv_validvtx[pho_n]) {
-    //    if (debug_level>9) std::cout << "Invalid Conversion" << std::endl;
-    //    ((TLorentzVector *)pho_conv_vertexcorrected_p4->At(pho_n))->SetXYZT(localPho->px(), localPho->py(), localPho->pz(), localPho->energy());
-    //    pho_n++;
-    //    continue;
-    //  }
-    //  
-    //  if (debug_level>9) std::cout << "Starting Conversion Loop" << std::endl;
-    //
-    //  for (unsigned int i=0; i<conversions.size(); i++) {
-    //	
-    //    //	reco::ConversionRef 
-    //    conv=conversions[i];
-    //
-    //    reco::Vertex vtx=conv->conversionVertex();
-    //
-    //    ((TVector3 *)pho_conv_vtx->At(pho_n))->SetXYZ(vtx.x(), vtx.y(), vtx.z());
-    //    ((TVector3 *)pho_conv_pair_momentum->At(pho_n))->SetXYZ(conv->pairMomentum().x(), conv->pairMomentum().y(), conv->pairMomentum().z());
-    //    ((TVector3 *)pho_conv_refitted_momentum->At(pho_n))->SetXYZ(conv->refittedPairMomentum().x(), conv->refittedPairMomentum().y(), conv->refittedPairMomentum().z());
-    //    
-    //    pho_conv_chi2[pho_n]=vtx.chi2();
-    //    pho_conv_chi2_probability[pho_n]=ChiSquaredProbability(vtx.chi2(), vtx.ndof());
-    //    pho_conv_ntracks[pho_n]=conv->nTracks();
-    //    pho_conv_MVALikelihood[pho_n]=conv->MVAout();
-    //
-    //    if(pho_conv_ntracks[pho_n]) {
-    //	  const std::vector<edm::RefToBase<reco::Track> > tracks = conv->tracks();
-    //	  for (unsigned int i=0; i<tracks.size(); i++) {
-    //        if(i==0) {
-    //          pho_conv_tk1_dz[pho_n]=tracks[i]->dz();
-    //          pho_conv_tk1_dzerr[pho_n]=tracks[i]->dzError();
-    //          pho_conv_ch1ch2[pho_n]=tracks[i]->charge();
-    //        } else if(i==1) {
-    //          pho_conv_tk2_dz[pho_n]=tracks[i]->dz();
-    //          pho_conv_tk2_dzerr[pho_n]=tracks[i]->dzError();
-    //          pho_conv_ch1ch2[pho_n]*=tracks[i]->charge();
-    //        }
-    //      }
-    //    }
-    //  }
-    //
-    //  pho_conv_pairinvmass[pho_n]=conv->pairInvariantMass();
-    //  pho_conv_paircotthetasep[pho_n]=conv->pairCotThetaSeparation();
-    //  pho_conv_eoverp[pho_n]=conv->EoverPrefittedTracks();
-    //  pho_conv_zofprimvtxfromtrks[pho_n]=conv->zOfPrimaryVertexFromTracks();
-    //  pho_conv_distofminapproach[pho_n]=conv->distOfMinimumApproach();
-    //  pho_conv_dphitrksatvtx[pho_n]=conv->dPhiTracksAtVtx();
-    //  pho_conv_dphitrksatecal[pho_n]=conv->dPhiTracksAtEcal();
-    //  pho_conv_detatrksatecal[pho_n]=conv->dEtaTracksAtEcal();
-    //
-    //  if(conv->tracks().size() > 0) {
-    //    pho_conv_tk1_d0[pho_n]=conv->tracksSigned_d0()[0];
-    //    pho_conv_tk1_pout[pho_n]=sqrt(conv->tracksPout()[0].Mag2());
-    //    pho_conv_tk1_pin[pho_n]=sqrt(conv->tracksPin()[0].Mag2());
-    //  }
-    //
-    //  if(conv->tracks().size() > 1) {
-    //    pho_conv_tk2_d0[pho_n]=conv->tracksSigned_d0()[1];
-    //    pho_conv_tk2_pout[pho_n]=sqrt(conv->tracksPout()[1].Mag2());
-    //    pho_conv_tk2_pin[pho_n]=sqrt(conv->tracksPin()[1].Mag2());
-    //  }
-    //
-    //  reco::Photon temp = *localPho;
-    //  temp.setVertex(math::XYZPoint(0.0, 0.0, pho_conv_zofprimvtxfromtrks[pho_n]));
-    //  ((TLorentzVector *)pho_conv_vertexcorrected_p4->At(pho_n))->SetXYZT(temp.px(), temp.py(), temp.pz(), temp.energy());
-    //}
 
     pho_n++;
   }

@@ -131,7 +131,6 @@ class GlobePhotons {
   Float_t pho_lambdadivcov_global[MAX_PHOTONS];
   Float_t pho_etawidth[MAX_PHOTONS];
   Float_t pho_brem[MAX_PHOTONS];
-  Float_t pho_smaj[MAX_PHOTONS];
   Float_t pho_hcalbcsumetconedr03[MAX_PHOTONS];
   Float_t pho_hcalbc1sumetconedr03[MAX_PHOTONS];
   Float_t pho_hcalbc2sumetconedr03[MAX_PHOTONS];
@@ -139,6 +138,20 @@ class GlobePhotons {
   Float_t pho_hcalbc1sumetconedr04[MAX_PHOTONS];
   Float_t pho_hcalbc2sumetconedr04[MAX_PHOTONS];
 
+  float pho_smaj[MAX_PHOTONS];
+  float pho_alpha[MAX_PHOTONS];
+  float pho_smin[MAX_PHOTONS];
+  float pho_r9_frac[MAX_PHOTONS];
+  float pho_sieie_frac[MAX_PHOTONS];
+  float pho_sieip_frac[MAX_PHOTONS];
+  float pho_sipip_frac[MAX_PHOTONS];
+  float pho_e2x2_frac[MAX_PHOTONS];
+  float pho_e5x5_frac[MAX_PHOTONS];
+  float pho_e3x3_frac[MAX_PHOTONS];
+  float pho_smaj_frac[MAX_PHOTONS];
+  float pho_alpha_frac[MAX_PHOTONS];
+  float pho_smin_frac[MAX_PHOTONS];
+  
   Float_t pho_sc_time[MAX_PHOTONS];
 
 // pi0 disc variable
