@@ -62,7 +62,7 @@ process.options = cms.untracked.PSet(
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(50))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 process.dummySelector = cms.EDFilter("CandViewCountFilter",
                                      src = cms.InputTag("gsfElectrons"),
@@ -192,7 +192,11 @@ process.h2ganalyzer.branchesToSkim = branchesToSkim
 
 
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring('/store/mc/TP2023SHCALDR/GJet_Pt-15to3000_Tune4C_14TeV_pythia8/GEN-SIM-RECO/SHCALJan23_PU140BX25_PH2_1K_FB_V6-v1/00000/002B9089-CEA6-E411-B2DF-0025905B85D0.root')
+                            fileNames = cms.untracked.vstring(
+        '/store/mc/TP2023SHCALDR//GJet_Pt-20to40_doubleEMEnriched_TuneZ2star_14TeV-pythia6/GEN-SIM-RECO/SHCALJan23_PU140BX25_PH2_1K_FB_V6-v1/20000/F2584185-DCC1-E411-A34A-001E67398E62.root',
+        '/store/mc/TP2023SHCALDR//GJet_Pt-20to40_doubleEMEnriched_TuneZ2star_14TeV-pythia6/GEN-SIM-RECO/SHCALJan23_PU140BX25_PH2_1K_FB_V6-v1/20000/E6A2C1C5-65C1-E411-B0B5-002590A371AC.root',
+        '/store/mc/TP2023SHCALDR//GJet_Pt-20to40_doubleEMEnriched_TuneZ2star_14TeV-pythia6/GEN-SIM-RECO/SHCALJan23_PU140BX25_PH2_1K_FB_V6-v1/20000/E6EBCFBA-F0C1-E411-9CF7-001E67398052.root',
+ )
 )  
 
 process.h2ganalyzer.doHLT = False
