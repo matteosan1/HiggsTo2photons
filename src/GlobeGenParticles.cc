@@ -6,6 +6,8 @@
 #include "SimDataFormats/JetMatching/interface/MatchedPartons.h"
 #include "SimDataFormats/JetMatching/interface/JetMatchedPartons.h"
 
+#include "DataFormats/Math/interface/deltaR.h"
+
 #include <iostream>
 
 GlobeGenParticles::GlobeGenParticles(const edm::ParameterSet& iConfig) {
@@ -102,12 +104,14 @@ bool GlobeGenParticles::analyze(const edm::Event& iEvent, const edm::EventSetup&
       const reco::JetFlavour aFlav = (*j).second; //flavour
       constituents = aJet->getJetConstituentsQuick();
       for(unsigned int i=0;i<constituents.size();i++) {
-	if(constituents.at(i)->eta() == fakePhoton->eta()) { 
+	float dr = reco::deltaR(constituents.at(i)->eta(), constituents.at(i)->phi(), fakePhoton->eta(), fakePhoton->phi());
+	if (dr < 0.05) {
 	  //the fake photon is contained in this jet
 	  if(aFlav.getFlavour()==21) 
 	    flavor[p] = 1;
 	  if(fabs(aFlav.getFlavour())<6) 
 	    flavor[p] = 2;
+	  break;
 	}
       }
     }
