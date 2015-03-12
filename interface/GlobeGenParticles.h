@@ -35,9 +35,13 @@ class GlobeGenParticles {
   TClonesArray *gp_p4;
   TClonesArray *gp_vtx;
 
+  float flavor[MAX_PHOTONS];
+
  private:
   GlobeCuts* gCUT;
   edm::InputTag genParticlesColl;
+  edm::InputTag jetFlavorColl;
+  edm::InputTag photonColl;
   int debug_level;
 };
 

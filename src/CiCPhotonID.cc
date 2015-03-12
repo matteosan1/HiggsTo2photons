@@ -1,6 +1,12 @@
 #define MSDEBUG 0
 #include "HiggsAnalysis/HiggsTo2photons/interface/CiCPhotonID.h"
 
+#include "DataFormats/ParticleFlowReco/interface/PFBlock.h"
+#include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
+#include "DataFormats/ParticleFlowReco/interface/PFClusterFwd.h"
+
+#include "DataFormats/Common/interface/RefToPtr.h"
+
 #include "DataFormats/Math/interface/deltaR.h"
 
 CiCPhotonID::CiCPhotonID(const edm::ParameterSet& config) {
@@ -348,9 +354,32 @@ float CiCPhotonID::pfEcalIso(reco::PhotonRef localPho, float dRmax, float dRVeto
     if (pfc.particleId() ==  pfToUse) {
       
       // Do not include the PFCandidate associated by SC Ref to the reco::Photon
-      if(pfc.superClusterRef().isNonnull() && localPho->superCluster().isNonnull()) {
-	if (pfc.superClusterRef() == localPho->superCluster()) 
-	  continue;
+      if(pfToUse == reco::PFCandidate::gamma) {
+	if( pfc.superClusterRef().isNonnull() && localPho->superCluster().isNonnull()) {
+	  if (pfc.superClusterRef() == localPho->superCluster()) 
+	    continue;
+	}	else {
+	  bool clusterOverlap = false;
+	  for(unsigned b=0; b<pfc.elementsInBlocks().size(); b++){
+	    reco::PFBlockRef blockRef = pfc.elementsInBlocks()[b].first;
+	    unsigned elementIndex = pfc.elementsInBlocks()[b].second;
+	    if(blockRef.isNull()) continue;
+	    const edm::OwnVector< reco::PFBlockElement >& elements = blockRef->elements();
+	    const reco::PFBlockElement& pfbe(elements[elementIndex]); 
+	    if( pfbe.type() == reco::PFBlockElement::ECAL ){
+	      reco::PFClusterRef myPFClusterRef = pfbe.clusterRef();
+	      if(myPFClusterRef.isNull()) continue;
+	      for(reco::CaloCluster_iterator it = localPho->superCluster()->clustersBegin(); it != localPho->superCluster()->clustersEnd(); ++it){
+		if( myPFClusterRef->seed() == (*it)->seed() ){
+		  clusterOverlap = true;
+		  break;
+		}
+	      }
+	    }
+	    if(clusterOverlap) break;
+	  }
+	  if(clusterOverlap) continue;
+	}
       }
       
       if (localPho->isEB()) {
