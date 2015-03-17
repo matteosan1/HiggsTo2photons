@@ -42,7 +42,8 @@ cd $CMSSW_BASE/src; git clone git@github.com:matteosan1/EgammaAnalysis
 cd $CMSSW_BASE/src; git clone -b topic_for_globe_shashlik git@github.com:matteosan1/RecoEgamma
 cd $CMSSW_BASE/src; git clone -b branch_for_Shashlik https://github.com/matteosan1/RecoEcal 
 cd $CMSSW_BASE/src; git clone -b branch_for_Shashlik https://github.com/matteosan1/Geometry 
-
+cd $CMSSW_BASE/src; rm -r  RecoEcal/EgammaClusterAlgos
+cd $CMSSW_BASE/src; rm -r  RecoEcal/EgammaClusterProducers
 
 #download extra informations
 cd $CMSSW_BASE/src ; cd EgammaAnalysis/ElectronTools/data/; wget -i ../../../HiggsAnalysis/HiggsTo2photons/scripts/download.url

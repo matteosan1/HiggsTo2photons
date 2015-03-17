@@ -363,6 +363,10 @@ void GlobePhotons::defineBranch(GlobeAnalyzer* ana) {
   ana->Branch("pho_conv_MVALikelihood",&pho_conv_MVALikelihood,"pho_conv_MVALikelihood[pho_n]/I");
 
   // added by pasquale
+  ana->Branch("pho_sieie_highN", &pho_sieie_highN, "pho_sieie_highN[pho_n]/F");
+  ana->Branch("pho_sipip_highN", &pho_sipip_highN, "pho_sipip_highN[pho_n]/F");
+  ana->Branch("pho_sieip_highN", &pho_sieip_highN, "pho_sieip_highN[pho_n]/F");
+
   ana->Branch("pho_sipip",&pho_sipip,"pho_sipip[pho_n]/F");
   ana->Branch("pho_sieip",&pho_sieip,"pho_sieip[pho_n]/F");
   ana->Branch("pho_zernike20",&pho_zernike20,"pho_zernike20[pho_n]/F");
@@ -653,6 +657,11 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     //shower shape variables
     pho_see[pho_n] = localPho->sigmaEtaEta();
+
+    std::vector<float> etaphimomentshighN = myClusterTools::noZSEcalClusterTools::localCovariancesHighN(25, *localPho->superCluster()->seed(), &(*prechits), &(*topology), 0);
+    pho_sieie_highN[pho_n] = sqrt(etaphimomentshighN[0]);
+    pho_sieip_highN[pho_n] = etaphimomentshighN[1];
+    pho_sipip_highN[pho_n] = sqrt(etaphimomentshighN[2]);
     std::vector<float> etaphimomentsnoZS = myClusterTools::noZSEcalClusterTools::localCovariances(*localPho->superCluster()->seed(), &(*prechits), &(*topology));
     pho_sieie[pho_n] = sqrt(etaphimomentsnoZS[0]);
     pho_sieip[pho_n] = etaphimomentsnoZS[1];

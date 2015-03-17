@@ -95,9 +95,12 @@ class GlobePhotons {
   //shower shape variables
   Float_t pho_see[MAX_PHOTONS];
   Float_t pho_sieie[MAX_PHOTONS];
+  Float_t pho_sieie_highN[MAX_PHOTONS];
   Float_t pho_sieie_cleaned[MAX_PHOTONS];
   Float_t pho_sipip[MAX_PHOTONS];
   Float_t pho_sieip[MAX_PHOTONS];
+  Float_t pho_sipip_highN[MAX_PHOTONS];
+  Float_t pho_sieip_highN[MAX_PHOTONS];
   Float_t pho_sieip_cleaned[MAX_PHOTONS];
   Float_t pho_e1x5[MAX_PHOTONS];
   Float_t pho_e1x3[MAX_PHOTONS];
