@@ -35,9 +35,9 @@ if (not((flagNoSkim is 'ON') ^ (flagSkimDiphoton is 'ON') ^ (flagMMgSkim is 'ON'
   exit(-1)
 
 process = cms.Process("Globe") 
-process.load("Geometry.CaloEventSetup.CaloTopology_cfi")
-process.load("Geometry.CaloEventSetup.CaloGeometry_cfi")
-process.load("Geometry.CaloEventSetup.CaloTowerConstituents_cfi")
+#process.load("Geometry.CaloEventSetup.CaloTopology_cfi")
+#process.load("Geometry.CaloEventSetup.CaloGeometry_cfi")
+#process.load("Geometry.CaloEventSetup.CaloTowerConstituents_cfi")
 process.load("Configuration.Geometry.GeometryExtended2019Reco_cff")
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('Configuration.StandardSequences.Services_cff')
@@ -219,3 +219,10 @@ process.h2ganalyzer.doVertices_nobs=False
 process.h2ganalyzer.doMet=False
 process.h2ganalyzer.dotcMet=False
 process.h2ganalyzer.h2gAnalyzerVersion = 'V15_00_11'
+
+# customisation of the process.
+# Automatic addition of the customisation function from SLHCUpgradeSimulations.Configuration.combinedCustoms
+from SLHCUpgradeSimulations.Configuration.combinedCustoms import cust_2019WithGem 
+
+#call to customisation function cust_2019WithGem imported from SLHCUpgradeSimulations.Configuration.combinedCustoms
+process = cust_2019WithGem(process)
